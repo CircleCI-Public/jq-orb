@@ -118,6 +118,8 @@ workflows:
           executor: machine
           context: orb-publishing
           filters: *integration-dev_filters
+          pre-steps:
+            - run: sudo rm -rf /usr/bin/jq
 
       - install:
           name: install-latest-macos-dev
@@ -147,6 +149,8 @@ workflows:
           version: jq-1.4
           context: orb-publishing
           filters: *integration-dev_filters
+          pre-steps:
+            - run: sudo rm -rf /usr/bin/jq
 
       - install:
           name: install-older-macos-dev
