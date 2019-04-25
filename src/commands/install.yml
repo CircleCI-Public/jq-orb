@@ -41,29 +41,32 @@ steps:
 
         tar xf "$JQ_VERSION.tar.gz" && rm -rf "$JQ_VERSION.tar.gz"
 
-        # import jq sigs
-        gpg --import "$JQ_VERSION/sig/jq-release.key"
-
-        # verify sha256sum, sig, install
+        # extract version number
         JQ_VERSION_NUMBER_STRING=$(echo $JQ_VERSION | sed -E 's/-/ /')
 
         arrJQ_VERSION_NUMBER=($JQ_VERSION_NUMBER_STRING)
 
-        JQ_VERSION_NUMBER="v${arrJQ_VERSION_NUMBER[-1]}"
+        JQ_VERSION_NUMBER="${arrJQ_VERSION_NUMBER[-1]}"
 
-        # get binary download URL for latest version
-        JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
-          "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-          grep browser_download_url | grep '/jq-linux64"' | grep -o -e 'https.*jq-linux64')
+        if [ -d "$JQ_VERSION/sig" ]; then
+          # import jq sigs
+          gpg --import "$JQ_VERSION/sig/jq-release.key"
 
-        curl --output "$JQ_VERSION/sig/$JQ_VERSION_NUMBER/jq-linux64" \
-          --silent --show-error --location --fail --retry 3 \
-          "$JQ_BINARY_URL"
+          # get binary download URL for latest version
+          JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
+            "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
+            grep browser_download_url | grep '/jq-linux64"' | grep -o -e 'https.*jq-linux64')
 
-        gpg --verify "$JQ_VERSION/sig/$JQ_VERSION_NUMBER/jq-linux64.asc"
+          curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-linux64" \
+            --silent --show-error --location --fail --retry 3 \
+            "$JQ_BINARY_URL"
 
-        cd "$JQ_VERSION/sig/$JQ_VERSION_NUMBER" && grep jq-linux64 "sha256sum.txt" | \
-          sha256sum -c -
+          # verify sha256sum, sig, install
+          gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-linux64.asc"
+
+          cd "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER" && grep jq-linux64 "sha256sum.txt" | \
+            sha256sum -c -
+        fi
 
         $SUDO mv jq-linux64 /usr/bin/jq
         $SUDO chmod +x /usr/bin/jq
