@@ -39,9 +39,18 @@ steps:
         fi
 
         echo "# get source download URL for specified version"
-        JQ_SOURCE_URL=$(curl --silent --show-error --location --fail --retry 3 \
+        if [[ $(curl --silent --show-error --location --fail --retry 3 \
+          "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
+          grep browser_download_url | grep -o -e 'https.*tar.gz') ]]; then
+
+          JQ_SOURCE_URL=$(curl --silent --show-error --location --fail --retry 3 \
           "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
           grep browser_download_url | grep -o -e 'https.*tar.gz')
+        else
+          JQ_SOURCE_URL="$(curl --silent --show-error --location --fail --retry 3 \
+          "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
+          grep tarball_url | sed -E 's%"tarball_url": |"|,%%g').tar.gz"
+        fi
 
         echo "# download jq"
         curl -O --silent --show-error --location --fail --retry 3 \
@@ -56,10 +65,10 @@ steps:
 
         JQ_VERSION_NUMBER="${arrJQ_VERSION_NUMBER[-1]}"
 
-        echo "# get binary download URL for latest version"
+        echo "# get binary download URL for specified version"
         JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
           "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-          grep browser_download_url | grep '/jq-linux64"' | grep -o -e 'https.*jq-linux.*64')
+          grep browser_download_url | grep '/jq-linux.*64.*"' | grep -o -e 'https.*jq-linux.*64')
 
         if [ -d "$JQ_VERSION/sig" ]; then
           echo "# import jq sigs"
