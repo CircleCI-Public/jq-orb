@@ -15,10 +15,10 @@ steps:
   - run:
       name: Install jq
       command: |
-        # install jq
+        echo "# install jq"
 
         if [[ <<parameters.version>> == "latest" ]]; then
-          # extract latest version from GitHub releases API
+          echo "# extract latest version from GitHub releases API"
           JQ_VERSION_STRING=$(curl --silent --show-error --location --fail --retry 3 \
             https://api.github.com/repos/stedolan/jq/releases/latest | grep tag_name | sed -E 's/"/%/g')
 
@@ -30,38 +30,38 @@ steps:
           JQ_VERSION=<<parameters.version>>
         fi
 
-        # get source download URL for specified version
+        echo "# get source download URL for specified version"
         JQ_SOURCE_URL=$(curl --silent --show-error --location --fail --retry 3 \
           "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
           grep browser_download_url | grep -o -e 'https.*tar.gz')
 
-        # download jq
+        echo "# download jq"
         curl -O --silent --show-error --location --fail --retry 3 \
           "$JQ_SOURCE_URL"
 
         tar xf "$JQ_VERSION.tar.gz" && rm -rf "$JQ_VERSION.tar.gz"
 
-        # extract version number
+        echo "# extract version number"
         JQ_VERSION_NUMBER_STRING=$(echo $JQ_VERSION | sed -E 's/-/ /')
 
         arrJQ_VERSION_NUMBER=($JQ_VERSION_NUMBER_STRING)
 
         JQ_VERSION_NUMBER="${arrJQ_VERSION_NUMBER[-1]}"
 
-        # get binary download URL for latest version
+        echo "# get binary download URL for latest version"
         JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
           "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
           grep browser_download_url | grep '/jq-linux64"' | grep -o -e 'https.*jq-linux64')
 
         if [ -d "$JQ_VERSION/sig" ]; then
-          # import jq sigs
+          echo "# import jq sigs"
           gpg --import "$JQ_VERSION/sig/jq-release.key"
 
           curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-linux64" \
             --silent --show-error --location --fail --retry 3 \
             "$JQ_BINARY_URL"
 
-          # verify sha256sum, sig, install
+          echo "# verify sha256sum, sig, install"
           gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-linux64.asc"
 
           cd "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER" && grep jq-linux64 "sha256sum.txt" | \
@@ -75,6 +75,6 @@ steps:
         $SUDO mv jq-linux64 /usr/bin/jq
         $SUDO chmod +x /usr/bin/jq
 
-        # verify version
+        echo "# verify version"
         which jq
         jq --version
