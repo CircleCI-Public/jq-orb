@@ -10,6 +10,20 @@ executors:
     docker:
       - image: cibuilds/base
 
+jobs:
+  install:
+    parameters:
+      executor:
+        type: executor
+      version:
+        type: string
+        default: latest
+
+    executor: <<parameters.executor>>
+    steps:
+      - jq/install:
+          version: <<parameters.version>>
+
 # yaml anchor filters
 integration-dev_filters: &integration-dev_filters
   branches:
@@ -25,15 +39,11 @@ integration-master_filters: &integration-master_filters
 
 prod-deploy_requires: &prod-deploy_requires
   [
-
+    install-alpine-master
   ]
 
 add-ssh-keys: &add-ssh-keys
-  [add_ssh_keys: {fingerprints: ["40:21:b7:d7:fe:ea:dd:80:ca:c8:34:7a:37:b4:b4:d2"]}]
-
-# not in use yet—add this functionality to git-tools-orb when it's ready
-# cleanup-git-tag: &cleanup-git-tag
-#   [run: {when: "always", name: "cleanup tag", command: "git config --global user.email $CIRCLE_USERNAME@users.noreply.github.com && git config --global user.name $CIRCLE_USERNAME && git push --delete origin $CIRCLE_TAG"}]
+  [add_ssh_keys: {fingerprints: ["0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3"]}]
 
 workflows:
   lint_pack-validate_publish-dev:
@@ -53,7 +63,7 @@ workflows:
       - orb-tools/trigger-integration-workflow:
           context: orb-publishing
           name: trigger-integration-dev
-          ssh-fingerprints: 79:ae:f5:10:17:8a:d2:9a:ed:63:5c:b0:92:66:23:49
+          ssh-fingerprints: 0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3
           cleanup-tags: true
           requires:
             - orb-tools/publish-dev
@@ -75,84 +85,22 @@ workflows:
   integration_tests-prod_deploy:
     jobs:
       # triggered by non-master branch commits
-      - notifytest:
-          name: notifytest-dev
+      - install:
+          name: install-alpine-dev
           context: orb-publishing
-          filters: *integration-dev_filters
-
-      - statustestpass-full:
-          name: statustestpass-full-dev
-          context: orb-publishing
-          filters: *integration-dev_filters
-
-      - statustestpass-minimal:
-          name: statustestpass-minimal-dev
-          context: orb-publishing
-          filters: *integration-dev_filters
-
-      - approvaltest:
-          name: approvaltest-dev
-          context: orb-publishing
-          filters: *integration-dev_filters
-
-      - approvaltest-mention-here:
-          name: approvaltest-mention-here-dev
-          context: orb-publishing
-          filters: *integration-dev_filters
-
-      - approvaltest-mention-here-2:
-          name: approvaltest-mention-here-2-dev
-          context: orb-publishing
-          filters: *integration-dev_filters
-
-      - slack/approval-notification:
-          name: approval-notification-job-dev
-          context: orb-publishing
-          mentions: "${ORBS_USER_GROUP_UUID}"
           filters: *integration-dev_filters
 
       # triggered by master branch commits
-      - notifytest:
-          name: notifytest-master
+      - install:
+          name: install-alpine-master
           context: orb-publishing
-          filters: *integration-master_filters
-
-      - statustestpass-full:
-          name: statustestpass-full-master
-          context: orb-publishing
-          filters: *integration-master_filters
-
-      - statustestpass-minimal:
-          name: statustestpass-minimal-master
-          context: orb-publishing
-          filters: *integration-master_filters
-
-      - approvaltest:
-          name: approvaltest-master
-          context: orb-publishing
-          filters: *integration-master_filters
-
-      - approvaltest-mention-here:
-          name: approvaltest-mention-here-master
-          context: orb-publishing
-          filters: *integration-master_filters
-
-      - approvaltest-mention-here-2:
-          name: approvaltest-mention-here-2-master
-          context: orb-publishing
-          filters: *integration-master_filters
-
-      - slack/approval-notification:
-          name: approval-notification-job-master
-          context: orb-publishing
-          mentions: "${ORBS_USER_GROUP_UUID}"
           filters: *integration-master_filters
 
       # patch, minor, or major publishing
       - orb-tools/dev-promote-prod:
           name: dev-promote-patch
           context: orb-publishing
-          orb-name: circleci/slack
+          orb-name: circleci/jq
           requires: *prod-deploy_requires
           filters:
             branches:
@@ -164,7 +112,7 @@ workflows:
           name: dev-promote-minor
           release: minor
           context: orb-publishing
-          orb-name: circleci/slack
+          orb-name: circleci/jq
           requires: *prod-deploy_requires
           filters:
             branches:
@@ -176,7 +124,7 @@ workflows:
           name: dev-promote-major
           release: major
           context: orb-publishing
-          orb-name: circleci/slack
+          orb-name: circleci/jq
           requires: *prod-deploy_requires
           filters:
             branches:
