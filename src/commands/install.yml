@@ -48,18 +48,18 @@ steps:
 
         JQ_VERSION_NUMBER="${arrJQ_VERSION_NUMBER[-1]}"
 
+        # get binary download URL for latest version
+        JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
+          "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
+          grep browser_download_url | grep '/jq-linux64"' | grep -o -e 'https.*jq-linux64')
+
+        curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-linux64" \
+          --silent --show-error --location --fail --retry 3 \
+          "$JQ_BINARY_URL"
+
         if [ -d "$JQ_VERSION/sig" ]; then
           # import jq sigs
           gpg --import "$JQ_VERSION/sig/jq-release.key"
-
-          # get binary download URL for latest version
-          JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
-            "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-            grep browser_download_url | grep '/jq-linux64"' | grep -o -e 'https.*jq-linux64')
-
-          curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-linux64" \
-            --silent --show-error --location --fail --retry 3 \
-            "$JQ_BINARY_URL"
 
           # verify sha256sum, sig, install
           gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-linux64.asc"
