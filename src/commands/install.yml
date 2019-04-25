@@ -49,7 +49,7 @@ steps:
         else
           JQ_SOURCE_URL="$(curl --silent --show-error --location --fail --retry 3 \
           "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-          grep tarball_url | sed -E 's%"tarball_url": |"|,%%g').tar.gz"
+          grep tarball_url | sed -E 's%tarball_url|:|"|,%%g' | sed 's: ::g').tar.gz"
         fi
 
         echo "# download jq"
