@@ -91,9 +91,15 @@ steps:
 
           gpg --import "$JQ_VERSION/sig/jq-release.key"
 
-          curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM" \
-            --silent --show-error --location --fail --retry 3 \
-            "$JQ_BINARY_URL"
+          if uname -a | grep Darwin; then
+            curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-osx-amd64" \
+              --silent --show-error --location --fail --retry 3 \
+              "$JQ_BINARY_URL"
+          else
+            curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM" \
+              --silent --show-error --location --fail --retry 3 \
+              "$JQ_BINARY_URL"
+          fi
 
           echo "# verify sha256sum, sig, install"
 
