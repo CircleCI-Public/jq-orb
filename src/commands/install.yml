@@ -47,9 +47,7 @@ steps:
           "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
           grep browser_download_url | grep -o -e 'https.*tar.gz')
         else
-          JQ_SOURCE_URL="$(curl --silent --show-error --location --fail --retry 3 \
-          "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-          grep tarball_url | sed -E 's%tarball_url":|"|,%%g' | sed 's% %%g').tar.gz"
+          JQ_SOURCE_URL="https://github.com/stedolan/jq/archive/$JQ_VERSION.tar.gz"
         fi
 
         echo "# download jq"
