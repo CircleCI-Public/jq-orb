@@ -1,0 +1,21 @@
+description: >
+  Install jq in a CircleCI job
+
+usage:
+  version: 2.1
+
+  orbs:
+    jq: circleci/jq@x.y.z
+
+  jobs:
+    build:
+      docker:
+        - image: your-image
+      steps:
+        - checkout
+        - jq/install
+
+  workflows:
+    your-workflow:
+      jobs:
+        - build

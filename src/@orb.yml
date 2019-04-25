@@ -1,0 +1,5 @@
+version: 2.1
+
+description: >
+  An orb for working with jq, a command-line JSON parser useful for
+  headless/automated API scripting
