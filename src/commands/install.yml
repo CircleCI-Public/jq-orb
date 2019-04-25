@@ -70,7 +70,10 @@ steps:
 
         if [ -d "$JQ_VERSION/sig" ]; then
           echo "# import jq sigs"
-          if uname -a | grep Darwin; then; brew install gnupg; fi
+
+          if uname -a | grep Darwin; then
+            brew install gnupg
+          fi
 
           gpg --import "$JQ_VERSION/sig/jq-release.key"
 
