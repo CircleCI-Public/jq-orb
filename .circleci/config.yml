@@ -1,0 +1,136 @@
+version: 2.1
+
+orbs:
+  orb-tools: circleci/orb-tools@8.8.0
+  jq: circleci/jq@dev:alpha
+
+executors:
+  ci-base:
+    resource_class: small
+    docker:
+      - image: cibuilds/base
+
+jobs:
+  install:
+    parameters:
+      executor:
+        type: executor
+      version:
+        type: string
+        default: latest
+
+    executor: <<parameters.executor>>
+    steps:
+      - run: apk add gnupg
+      - jq/install:
+          version: <<parameters.version>>
+
+# yaml anchor filters
+integration-dev_filters: &integration-dev_filters
+  branches:
+    ignore: /.*/
+  tags:
+    only: /integration-.*/
+
+integration-master_filters: &integration-master_filters
+  branches:
+    ignore: /.*/
+  tags:
+    only: /master-.*/
+
+prod-deploy_requires: &prod-deploy_requires
+  [
+    install-alpine-master
+  ]
+
+add-ssh-keys: &add-ssh-keys
+  [add_ssh_keys: {fingerprints: ["0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3"]}]
+
+workflows:
+  lint_pack-validate_publish-dev:
+    jobs:
+      - orb-tools/lint
+
+      - orb-tools/pack:
+          requires:
+            - orb-tools/lint
+
+      - orb-tools/publish-dev:
+          context: orb-publishing
+          orb-name: circleci/slack
+          requires:
+            - orb-tools/pack
+
+      - orb-tools/trigger-integration-workflow:
+          context: orb-publishing
+          name: trigger-integration-dev
+          ssh-fingerprints: 0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3
+          cleanup-tags: true
+          requires:
+            - orb-tools/publish-dev
+          filters:
+            branches:
+              ignore: master
+
+      - orb-tools/trigger-integration-workflow:
+          name: trigger-integration-master
+          ssh-fingerprints: 79:ae:f5:10:17:8a:d2:9a:ed:63:5c:b0:92:66:23:49
+          cleanup-tags: true
+          tag: master
+          requires:
+            - orb-tools/publish-dev
+          filters:
+            branches:
+              only: master
+
+  integration_tests-prod_deploy:
+    jobs:
+      # triggered by non-master branch commits
+      - install:
+          name: install-alpine-dev
+          executor: ci-base
+          context: orb-publishing
+          filters: *integration-dev_filters
+
+      # triggered by master branch commits
+      - install:
+          name: install-alpine-master
+          executor: ci-base
+          context: orb-publishing
+          filters: *integration-master_filters
+
+      # patch, minor, or major publishing
+      - orb-tools/dev-promote-prod:
+          name: dev-promote-patch
+          context: orb-publishing
+          orb-name: circleci/jq
+          requires: *prod-deploy_requires
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /master-patch.*/
+
+      - orb-tools/dev-promote-prod:
+          name: dev-promote-minor
+          release: minor
+          context: orb-publishing
+          orb-name: circleci/jq
+          requires: *prod-deploy_requires
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /master-minor.*/
+
+      - orb-tools/dev-promote-prod:
+          name: dev-promote-major
+          release: major
+          context: orb-publishing
+          orb-name: circleci/jq
+          requires: *prod-deploy_requires
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /master-major.*/

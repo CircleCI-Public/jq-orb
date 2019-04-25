@@ -1,0 +1,73 @@
+description: >
+  Install jq in a CircleCI job. Requirements: bash, curl, gpg, grep,
+  sed, sha256sum, tar
+
+parameters:
+  version:
+    type: string
+    default: latest
+    description: >
+      Version of jq to install, defaults to `latest`. If specifying a
+      version other than latest, provide a full release tag, as listed at
+      https://api.github.com/repos/stedolan/jq/releases, e.g., `jq-1.6`.
+
+steps:
+  - run:
+      name: Install jq
+      command: |
+        # install jq
+
+        if [[ <<parameters.version>> == "latest" ]]; then
+          # extract latest version from GitHub releases API
+          JQ_VERSION_STRING=$(curl --silent --show-error --location --fail --retry 3 \
+            https://api.github.com/repos/stedolan/jq/releases/latest | grep tag_name | sed -E 's/"/%/g')
+
+          IFS='%'; arrJQ_VERSION=($JQ_VERSION_STRING); unset IFS
+
+          JQ_VERSION=${arrJQ_VERSION[-2]}
+
+        else
+          JQ_VERSION=<<parameters.version>>
+        fi
+
+        # get source download URL for specified version
+        JQ_SOURCE_URL=$(curl --silent --show-error --location --fail --retry 3 \
+          "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
+          grep browser_download_url | grep -o -e 'https.*tar.gz')
+
+        # download jq
+        curl -O --silent --show-error --location --fail --retry 3 \
+          "$JQ_SOURCE_URL"
+
+        tar xf "$JQ_VERSION.tar.gz" && rm -rf "$JQ_VERSION.tar.gz"
+
+        # import jq sigs
+        gpg --import "$JQ_VERSION/sig/jq-release.key"
+
+        # verify sha256sum, sig, install
+        JQ_VERSION_NUMBER_STRING=$(echo $JQ_VERSION | sed -E 's/-/ /')
+
+        arrJQ_VERSION_NUMBER=($JQ_VERSION_NUMBER_STRING)
+
+        JQ_VERSION_NUMBER="v${arrJQ_VERSION_NUMBER[-1]}"
+
+        # get binary download URL for latest version
+        JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
+          "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
+          grep browser_download_url | grep '/jq-linux64"' | grep -o -e 'https.*jq-linux64')
+
+        curl --output "$JQ_VERSION/sig/$JQ_VERSION_NUMBER/jq-linux64" \
+          --silent --show-error --location --fail --retry 3 \
+          "$JQ_BINARY_URL"
+
+        gpg --verify "$JQ_VERSION/sig/$JQ_VERSION_NUMBER/jq-linux64.asc"
+
+        cd "$JQ_VERSION/sig/$JQ_VERSION_NUMBER" && grep jq-linux64 "sha256sum.txt" | \
+          sha256sum -c -
+
+        $SUDO mv jq-linux64 /usr/bin/jq
+        $SUDO chmod +x /usr/bin/jq
+
+        # verify version
+        which jq
+        jq --version
