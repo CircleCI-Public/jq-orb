@@ -51,7 +51,7 @@ steps:
         echo "# get binary download URL for latest version"
         JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
           "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-          grep browser_download_url | grep '/jq-linux64"' | grep -o -e 'https.*jq-linux64')
+          grep browser_download_url | grep '/jq-linux64"' | grep -o -e 'https.*jq-linux.*64')
 
         if [ -d "$JQ_VERSION/sig" ]; then
           echo "# import jq sigs"
