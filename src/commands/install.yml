@@ -23,10 +23,10 @@ steps:
       command: |
         if [[ $EUID == 0 ]]; then export SUDO=""; else export SUDO="sudo"; fi
 
-        echo "# install jq"
+        # install jq
 
         if [[ <<parameters.version>> == "latest" ]]; then
-          echo "# extract latest version from GitHub releases API"
+          # extract latest version from GitHub releases API
           JQ_VERSION_STRING=$(curl --silent --show-error --location --fail --retry 3 \
             https://api.github.com/repos/stedolan/jq/releases/latest | grep tag_name | sed -E 's/"/%/g')
 
@@ -38,7 +38,7 @@ steps:
           JQ_VERSION=<<parameters.version>>
         fi
 
-        echo "# get source download URL for specified version"
+        # get source download URL for specified version
         if [[ $(curl --silent --show-error --location --fail --retry 3 \
           "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
           grep browser_download_url | grep -o -e 'https.*tar.gz') ]]; then
@@ -50,28 +50,28 @@ steps:
           JQ_SOURCE_URL="https://github.com/stedolan/jq/archive/$JQ_VERSION.tar.gz"
         fi
 
-        echo "# download jq"
+        # download jq
         curl -O --silent --show-error --location --fail --retry 3 \
           "$JQ_SOURCE_URL"
 
         tar xf "$JQ_VERSION.tar.gz" && rm -rf "$JQ_VERSION.tar.gz"
 
-        echo "# extract version number"
+        # extract version number
         JQ_VERSION_NUMBER_STRING=$(echo $JQ_VERSION | sed -E 's/-/ /')
 
         arrJQ_VERSION_NUMBER=($JQ_VERSION_NUMBER_STRING)
 
         JQ_VERSION_NUMBER="${arrJQ_VERSION_NUMBER[1]}"
 
-        echo "# get binary download URL for specified version"
-        echo "# handle mac version"
+        # get binary download URL for specified version
+        # handle mac version
         if uname -a | grep Darwin; then
           JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
             "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
             grep browser_download_url | grep '/jq-osx.*64.*"' | \
             grep -o -e 'https.*jq-osx.*64.*' | sed -E 's%"%%g')
         else
-          echo "# linux version"
+          # linux version
           JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
             "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
             grep browser_download_url | grep '/jq-linux.*64.*"' | \
@@ -79,11 +79,10 @@ steps:
         fi
 
         if [ -d "$JQ_VERSION/sig" ]; then
-          echo "# import jq sigs"
+          # import jq sigs
 
           if uname -a | grep Darwin; then
             HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg coreutils
-            # $SUDO ln -s /usr/local/bin/gsha256sum /usr/local/bin/sha256sum
 
             PLATFORM=osx-amd64
           else
@@ -96,7 +95,7 @@ steps:
               --silent --show-error --location --fail --retry 3 \
               "$JQ_BINARY_URL"
 
-          echo "# verify sha256sum, sig, install"
+          # verify sha256sum, sig, install
 
           gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM.asc"
 
@@ -112,6 +111,6 @@ steps:
         $SUDO mv "jq-$PLATFORM" <<parameters.install-dir>>/jq
         $SUDO chmod +x <<parameters.install-dir>>/jq
 
-        echo "# verify version"
+        # verify version
         which jq
         jq --version
