@@ -82,8 +82,8 @@ steps:
           echo "# import jq sigs"
 
           if uname -a | grep Darwin; then
-            brew install gnupg coreutils
-            $SUDO ln -s /usr/local/bin/gsha256sum /usr/local/bin/sha256sum
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg coreutils
+            # $SUDO ln -s /usr/local/bin/gsha256sum /usr/local/bin/sha256sum
 
             PLATFORM=osx-amd64
           else
