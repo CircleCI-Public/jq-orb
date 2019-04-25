@@ -1,6 +1,6 @@
 description: >
-  Install jq in a CircleCI job. Requirements: bash, curl, gpg, grep,
-  sed, sha256sum, tar
+  Install jq in a CircleCI job. Supports jq versions 1.3 and newer.
+  Requirements: bash, curl, gpg, grep, sed, sha256sum, tar
 
 parameters:
   version:
