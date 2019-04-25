@@ -119,7 +119,7 @@ workflows:
           context: orb-publishing
           filters: *integration-dev_filters
           pre-steps:
-            - run: sudo rm -rf /usr/bin/jq
+            - run: sudo rm -rf /usr/local/bin/jq
 
       - install:
           name: install-latest-macos-dev
@@ -150,7 +150,7 @@ workflows:
           context: orb-publishing
           filters: *integration-dev_filters
           pre-steps:
-            - run: sudo rm -rf /usr/bin/jq
+            - run: sudo rm -rf /usr/local/bin/jq
 
       - install:
           name: install-older-macos-dev
@@ -182,7 +182,7 @@ workflows:
           context: orb-publishing
           filters: *integration-master_filters
           pre-steps:
-            - run: sudo rm -rf /usr/bin/jq
+            - run: sudo rm -rf /usr/local/bin/jq
 
       - install:
           name: install-latest-macos-master
@@ -213,7 +213,7 @@ workflows:
           context: orb-publishing
           filters: *integration-master_filters
           pre-steps:
-            - run: sudo rm -rf /usr/bin/jq
+            - run: sudo rm -rf /usr/local/bin/jq
 
       - install:
           name: install-older-macos-master
