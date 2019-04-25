@@ -64,16 +64,19 @@ steps:
         JQ_VERSION_NUMBER="${arrJQ_VERSION_NUMBER[1]}"
 
         echo "# get binary download URL for specified version"
-        # handle mac version
+        echo "# handle mac version"
         if uname -a | grep Darwin; then
           JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
           "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-          grep browser_download_url | grep '/jq-osx.*64.*"' | grep -o -e 'https.*jq-osx.*64.*' | sed -E 's%"%%g')
+          grep browser_download_url | grep '/jq-osx.*64.*"' | \
+          grep -o -e 'https.*jq-osx.*64.*' | sed -E 's%"%%g')
         else
-          # linux version
+          echo "# linux version"
+
           JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
           "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-          grep browser_download_url | grep '/jq-linux.*64.*"' | grep -o -e 'https.*jq-linux.*64.*' | sed -E 's%"%%g')
+          grep browser_download_url | grep '/jq-linux.*64.*"' | \
+          grep -o -e 'https.*jq-linux.*64.*' | sed -E 's%"%%g')
         fi
 
         if [ -d "$JQ_VERSION/sig" ]; then
