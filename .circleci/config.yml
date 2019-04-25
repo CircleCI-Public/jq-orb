@@ -75,7 +75,7 @@ workflows:
 
       - orb-tools/publish-dev:
           context: orb-publishing
-          orb-name: circleci/slack
+          orb-name: circleci/jq
           requires:
             - orb-tools/pack
 
