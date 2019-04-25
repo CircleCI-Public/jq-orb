@@ -15,6 +15,8 @@ steps:
   - run:
       name: Install jq
       command: |
+        if [[ $EUID == 0 ]]; then export SUDO=""; else export SUDO="sudo"; fi
+
         echo "# install jq"
 
         if [[ <<parameters.version>> == "latest" ]]; then
