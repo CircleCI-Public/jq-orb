@@ -32,7 +32,7 @@ steps:
 
           IFS='%'; arrJQ_VERSION=($JQ_VERSION_STRING); unset IFS
 
-          JQ_VERSION=${arrJQ_VERSION[-2]}
+          JQ_VERSION=${arrJQ_VERSION[3]}
 
         else
           JQ_VERSION=<<parameters.version>>
@@ -61,7 +61,7 @@ steps:
 
         arrJQ_VERSION_NUMBER=($JQ_VERSION_NUMBER_STRING)
 
-        JQ_VERSION_NUMBER="${arrJQ_VERSION_NUMBER[-1]}"
+        JQ_VERSION_NUMBER="${arrJQ_VERSION_NUMBER[1]}"
 
         echo "# get binary download URL for specified version"
         JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
