@@ -87,12 +87,14 @@ workflows:
       # triggered by non-master branch commits
       - install:
           name: install-alpine-dev
+          executor: ci-base
           context: orb-publishing
           filters: *integration-dev_filters
 
       # triggered by master branch commits
       - install:
           name: install-alpine-master
+          executor: ci-base
           context: orb-publishing
           filters: *integration-master_filters
 
