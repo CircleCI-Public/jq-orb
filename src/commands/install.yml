@@ -11,6 +11,12 @@ parameters:
       version other than latest, provide a full release tag, as listed at
       https://api.github.com/repos/stedolan/jq/releases, e.g., `jq-1.6`.
 
+  install-dir:
+    type: string
+    default: /usr/bin
+    description: >
+      Directory in which to install jq
+
 steps:
   - run:
       name: Install jq
@@ -74,8 +80,8 @@ steps:
             "$JQ_BINARY_URL"
         fi
 
-        $SUDO mv jq-linux64 /usr/bin/jq
-        $SUDO chmod +x /usr/bin/jq
+        $SUDO mv jq-linux64 <<parameters.install-dir>>/jq
+        $SUDO chmod +x <<parameters.install-dir>>/jq
 
         echo "# verify version"
         which jq
