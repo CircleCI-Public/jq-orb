@@ -82,38 +82,26 @@ steps:
           echo "# import jq sigs"
 
           if uname -a | grep Darwin; then
-            brew install gnupg
+            brew install gnupg coreutils
+            $SUDO ln -s /usr/local/bin/gsha256sum /usr/local/bin/sha256sum
 
-            PLATFORM=osx64
+            PLATFORM=osx-amd64
           else
             PLATFORM=linux64
           fi
 
           gpg --import "$JQ_VERSION/sig/jq-release.key"
 
-          if uname -a | grep Darwin; then
-            curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-osx-amd64" \
+          curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM" \
               --silent --show-error --location --fail --retry 3 \
               "$JQ_BINARY_URL"
-          else
-            curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM" \
-              --silent --show-error --location --fail --retry 3 \
-              "$JQ_BINARY_URL"
-          fi
 
           echo "# verify sha256sum, sig, install"
 
-          if uname -a | grep Darwin; then
-            gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-osx-amd64.asc"
+          gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM.asc"
 
-            cd "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER" && grep jq-osx-amd64 "sha256sum.txt" | \
-            sha256sum -c -
-          else
-            gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM.asc"
-
-            cd "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER" && grep "jq-$PLATFORM" "sha256sum.txt" | \
-            sha256sum -c -
-          fi
+          cd "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER" && grep "jq-$PLATFORM" "sha256sum.txt" | \
+          sha256sum -c -
 
         else
           curl --output "jq-$PLATFORM" \
