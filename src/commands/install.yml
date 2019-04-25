@@ -82,31 +82,31 @@ steps:
           if uname -a | grep Darwin; then
             brew install gnupg
 
-            PLATFORM=osx
+            PLATFORM=osx64
           else
-            PLATFORM=linux
+            PLATFORM=linux64
           fi
 
           gpg --import "$JQ_VERSION/sig/jq-release.key"
 
           if uname -a | grep Darwin; then
 
-          curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-${PLATFORM}64" \
+          curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM" \
             --silent --show-error --location --fail --retry 3 \
             "$JQ_BINARY_URL"
 
           echo "# verify sha256sum, sig, install"
-          gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-${PLATFORM}64.asc"
+          gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM.asc"
 
-          cd "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER" && grep "jq-${PLATFORM}64" "sha256sum.txt" | \
+          cd "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER" && grep "jq-$PLATFORM" "sha256sum.txt" | \
             sha256sum -c -
         else
-          curl --output "jq-${PLATFORM}64" \
+          curl --output "jq-$PLATFORM" \
             --silent --show-error --location --fail --retry 3 \
             "$JQ_BINARY_URL"
         fi
 
-        $SUDO mv "jq-${PLATFORM}64" <<parameters.install-dir>>/jq
+        $SUDO mv "jq-$PLATFORM" <<parameters.install-dir>>/jq
         $SUDO chmod +x <<parameters.install-dir>>/jq
 
         echo "# verify version"
