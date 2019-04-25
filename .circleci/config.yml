@@ -20,7 +20,7 @@ executors:
   docker:
     resource_class: small
     docker:
-      - image: circleci/node
+      - image: node
 
 jobs:
   install:
