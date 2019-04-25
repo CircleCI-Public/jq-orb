@@ -51,7 +51,14 @@ integration-master_filters: &integration-master_filters
 
 prod-deploy_requires: &prod-deploy_requires
   [
-    install-alpine-master
+    install-latest-alpine-master,
+    install-latest-machine-master,
+    install-latest-macos-master,
+    install-latest-docker-master,
+    install-older-alpine-master,
+    install-older-machine-master,
+    install-older-macos-master,
+    install-older-docker-master
   ]
 
 add-ssh-keys: &add-ssh-keys
