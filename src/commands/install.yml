@@ -13,7 +13,7 @@ parameters:
 
   install-dir:
     type: string
-    default: /usr/bin
+    default: /usr/local/bin
     description: >
       Directory in which to install jq
 
@@ -70,6 +70,8 @@ steps:
 
         if [ -d "$JQ_VERSION/sig" ]; then
           echo "# import jq sigs"
+          if uname -a | grep Darwin; then; brew install gnupg; fi
+
           gpg --import "$JQ_VERSION/sig/jq-release.key"
 
           curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-linux64" \
