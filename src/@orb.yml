@@ -2,4 +2,5 @@ version: 2.1
 
 description: >
   An orb for working with jq, a command-line JSON parser useful for
-  headless/automated API scripting
+  headless/automated API scripting. View the source for this orb:
+  https://github.com/CircleCI-Public/jq-orb
