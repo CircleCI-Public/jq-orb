@@ -44,7 +44,7 @@ steps:
             echo "$JQ_VERSION is already installed"
             exit 0
           else
-            echo "a different version of jq is installed ($(jq --version)); removing it"
+            echo "A different version of jq is installed ($(jq --version)); removing it"
             $SUDO rm -f $(command -v jq)
           fi
         fi
@@ -123,5 +123,5 @@ steps:
         $SUDO chmod +x <<parameters.install-dir>>/jq
 
         # verify version
-        which jq
-        jq --version
+        echo "jq has been installed to $(which jq)"
+        echo "jq version: $(jq --version)"
