@@ -40,7 +40,7 @@ steps:
 
         # check if jq needs to be installed
         if command -v jq >> /dev/null 2>&1; then
-          if jq --version | grep $JQ_VERSION; then
+          if jq --version | grep $JQ_VERSION >> /dev/null 2>&1; then
             echo "$JQ_VERSION is already installed"
             exit 0
           else
