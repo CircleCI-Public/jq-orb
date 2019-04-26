@@ -23,8 +23,7 @@ steps:
       command: |
         if [[ $EUID == 0 ]]; then export SUDO=""; else export SUDO="sudo"; fi
 
-        # install jq
-
+        # grab jq version
         if [[ <<parameters.version>> == "latest" ]]; then
           # extract latest version from GitHub releases API
           JQ_VERSION_STRING=$(curl --silent --show-error --location --fail --retry 3 \
@@ -34,8 +33,19 @@ steps:
 
           JQ_VERSION=${arrJQ_VERSION[3]}
 
+          echo "Latest version of jq is $JQ_VERSION"
         else
           JQ_VERSION=<<parameters.version>>
+        fi
+
+        # check if jq needs to be installed
+        if jq --version | grep $JQ_VERSION; then
+          echo "$JQ_VERSION is already installed"
+        else
+          if command -v jq; then
+            echo "a different version of jq is installed; removing it"
+            $SUDO rm -f $(command -v jq)
+          fi
         fi
 
         # get source download URL for specified version
