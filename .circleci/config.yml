@@ -110,8 +110,6 @@ workflows:
           executor: ci-base
           context: orb-publishing
           filters: *integration-dev_filters
-          pre-steps:
-            - run: apk add gnupg
 
       - install:
           name: install-latest-machine-dev
@@ -138,8 +136,6 @@ workflows:
           version: jq-1.5
           context: orb-publishing
           filters: *integration-dev_filters
-          pre-steps:
-            - run: apk add gnupg
 
       - install:
           name: install-older-machine-dev
@@ -169,8 +165,6 @@ workflows:
           executor: ci-base
           context: orb-publishing
           filters: *integration-master_filters
-          pre-steps:
-            - run: apk add gnupg
 
       - install:
           name: install-latest-machine-master
@@ -197,8 +191,6 @@ workflows:
           version: jq-1.5
           context: orb-publishing
           filters: *integration-master_filters
-          pre-steps:
-            - run: apk add gnupg
 
       - install:
           name: install-older-machine-master

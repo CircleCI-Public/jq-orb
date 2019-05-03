@@ -97,6 +97,9 @@ steps:
 
             PLATFORM=osx-amd64
           else
+            if cat /etc/issue | grep Alpine >> /dev/null 2>&1; then
+              $SUDO apk add gnupg
+            fi
             PLATFORM=linux64
           fi
 
