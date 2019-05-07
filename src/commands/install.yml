@@ -98,12 +98,12 @@ steps:
             PLATFORM=osx-amd64
           else
             if cat /etc/issue | grep Alpine >> /dev/null 2>&1; then
-              $SUDO apk add gnupg
+              $SUDO apk add gnupg > /dev/null
             fi
             PLATFORM=linux64
           fi
 
-          gpg --import "$JQ_VERSION/sig/jq-release.key"
+          gpg --import "$JQ_VERSION/sig/jq-release.key" > /dev/null
 
           curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM" \
               --silent --show-error --location --fail --retry 3 \
