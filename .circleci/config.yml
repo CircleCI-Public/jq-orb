@@ -242,7 +242,6 @@ workflows:
           release: major
           context: orb-publishing
           orb-name: circleci/jq
-          orb-ref: dev:alpha
           requires: *prod-deploy_requires
           filters:
             branches:
