@@ -127,4 +127,5 @@ steps:
 
         # verify version
         echo "jq has been installed to $(which jq)"
-        echo "jq version: $(jq --version)"
+        echo "jq version:"
+        echo "$(jq --version)"
