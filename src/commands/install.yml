@@ -76,7 +76,7 @@ steps:
 
         # get binary download URL for specified version
         # handle mac version
-        if uname -a | grep Darwin; then
+        if uname -a | grep Darwin > /dev/null 2>&1; then
           JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
             "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
             grep browser_download_url | grep '/jq-osx.*64.*"' | \
@@ -92,13 +92,13 @@ steps:
         if [ -d "$JQ_VERSION/sig" ]; then
           # import jq sigs
 
-          if uname -a | grep Darwin; then
+          if uname -a | grep Darwin > /dev/null 2>&1; then
             HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg coreutils
 
             PLATFORM=osx-amd64
           else
-            if cat /etc/issue | grep Alpine >> /dev/null 2>&1; then
-              $SUDO apk add gnupg > /dev/null
+            if cat /etc/issue | grep Alpine > /dev/null 2>&1; then
+              $SUDO apk add gnupg > /dev/null 2>&1
             fi
             PLATFORM=linux64
           fi
@@ -127,4 +127,5 @@ steps:
 
         # verify version
         echo "jq has been installed to $(which jq)"
-        echo "jq version: $(jq --version)"
+        echo "jq version:"
+        echo "$(jq --version)"
