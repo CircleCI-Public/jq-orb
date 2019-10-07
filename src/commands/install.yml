@@ -89,6 +89,8 @@ steps:
             grep -o -e 'https.*jq-linux.*64.*' | sed -E 's%"%%g')
         fi
 
+        jqBinary="jq-$PLATFORM"
+
         if [ -d "$JQ_VERSION/sig" ]; then
           # import jq sigs
 
@@ -113,17 +115,22 @@ steps:
 
           gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM.asc"
 
-          cd "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER" && grep "jq-$PLATFORM" "sha256sum.txt" | \
+          pushd "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER" && grep "jq-$PLATFORM" "sha256sum.txt" | \
           sha256sum -c -
+          popd
+          jqBinary="$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM"
 
         else
-          curl --output "jq-$PLATFORM" \
+          curl --output "$jqBinary" \
             --silent --show-error --location --fail --retry 3 \
             "$JQ_BINARY_URL"
         fi
 
-        $SUDO mv "jq-$PLATFORM" <<parameters.install-dir>>/jq
+        $SUDO mv "$jqBinary" <<parameters.install-dir>>/jq
         $SUDO chmod +x <<parameters.install-dir>>/jq
+
+        # cleanup
+        [[ -d "./$JQ_VERSION" ]] && rm -rf "./$JQ_VERSION"
 
         # verify version
         echo "jq has been installed to $(which jq)"
