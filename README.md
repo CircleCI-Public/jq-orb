@@ -4,7 +4,7 @@ Quickly and easily install `jq` in any CircleCI job.
 
 ## Usage
 
-_For full usage guidelines, see the [orb registry listing](http://circleci.com/orbs/registry/orb/circleci/jq)._
+_For full usage guidelines, see the [orb registry listing](https://circleci.com/orbs/registry/orb/circleci/jq)._
 
 ## Contributing
 
