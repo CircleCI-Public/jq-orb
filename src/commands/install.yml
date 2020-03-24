@@ -17,51 +17,43 @@ parameters:
     description: >
       Directory in which to install jq
 
+  override:
+    type: boolean
+    default: false
+    description: |
+      Whether or not to remove a pre-existing version of jq when this version
+      is installed.
+
 steps:
   - run:
       name: Install jq
       command: |
         if [[ $EUID == 0 ]]; then export SUDO=""; else export SUDO="sudo"; fi
 
-        # grab jq version
+        # check if jq needs to be installed
+        if command -v jq >> /dev/null 2>&1; then
+
+            echo "jq is already installed..."
+
+          if [[ <<parameters.override>> ]]; then
+            echo "removing it."
+            $SUDO rm -f $(command -v jq)
+          else
+            echo "ignoring install request."
+            exit 0
+          fi
+        fi
+
+        # Set jq version
         if [[ <<parameters.version>> == "latest" ]]; then
-          # extract latest version from GitHub releases API
-          JQ_VERSION_STRING=$(curl --silent --show-error --location --fail --retry 3 \
-            https://api.github.com/repos/stedolan/jq/releases/latest | grep tag_name | sed -E 's/"/%/g')
-
-          IFS='%'; arrJQ_VERSION=($JQ_VERSION_STRING); unset IFS
-
-          JQ_VERSION=${arrJQ_VERSION[3]}
-
+          JQ_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.com/stedolan/jq/releases/latest" | sed 's:.*/::')
           echo "Latest version of jq is $JQ_VERSION"
         else
           JQ_VERSION=<<parameters.version>>
         fi
 
-        # check if jq needs to be installed
-        if command -v jq >> /dev/null 2>&1; then
-          if jq --version | grep $JQ_VERSION >> /dev/null 2>&1; then
-            echo "$JQ_VERSION is already installed"
-            exit 0
-          else
-            echo "A different version of jq is installed ($(jq --version)); removing it"
-            $SUDO rm -f $(command -v jq)
-          fi
-        fi
-
-        # get source download URL for specified version
-        if [[ $(curl --silent --show-error --location --fail --retry 3 \
-          "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-          grep browser_download_url | grep -o -e 'https.*tar.gz') ]]; then
-
-          JQ_SOURCE_URL=$(curl --silent --show-error --location --fail --retry 3 \
-          "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-          grep browser_download_url | grep -o -e 'https.*tar.gz')
-        else
-          JQ_SOURCE_URL="https://github.com/stedolan/jq/archive/$JQ_VERSION.tar.gz"
-        fi
-
-        # download jq
+        # Download jq source tarball
+        JQ_SOURCE_URL="https://github.com/stedolan/jq/archive/$JQ_VERSION.tar.gz"
         curl -O --silent --show-error --location --fail --retry 3 \
           "$JQ_SOURCE_URL"
 
@@ -69,24 +61,16 @@ steps:
 
         # extract version number
         JQ_VERSION_NUMBER_STRING=$(echo $JQ_VERSION | sed -E 's/-/ /')
-
         arrJQ_VERSION_NUMBER=($JQ_VERSION_NUMBER_STRING)
-
         JQ_VERSION_NUMBER="${arrJQ_VERSION_NUMBER[1]}"
 
-        # get binary download URL for specified version
+        # Set binary download URL for specified version
         # handle mac version
         if uname -a | grep Darwin > /dev/null 2>&1; then
-          JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
-            "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-            grep browser_download_url | grep '/jq-osx.*64.*"' | \
-            grep -o -e 'https.*jq-osx.*64.*' | sed -E 's%"%%g')
+          JQ_BINARY_URL="https://github.com/stedolan/jq/releases/download/${JQ_VERSION}/jq-osx-amd64"
         else
           # linux version
-          JQ_BINARY_URL=$(curl --silent --show-error --location --fail --retry 3 \
-            "https://api.github.com/repos/stedolan/jq/releases/tags/$JQ_VERSION" | \
-            grep browser_download_url | grep '/jq-linux.*64.*"' | \
-            grep -o -e 'https.*jq-linux.*64.*' | sed -E 's%"%%g')
+          JQ_BINARY_URL="https://github.com/stedolan/jq/releases/download/${JQ_VERSION}/jq-linux64"
         fi
 
         jqBinary="jq-$PLATFORM"
