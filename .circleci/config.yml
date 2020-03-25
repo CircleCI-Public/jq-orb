@@ -2,8 +2,19 @@ version: 2.1
 
 orbs:
   build-tools: circleci/build-tools@2.5.0
-  orb-tools: circleci/orb-tools@8.20.1
+  orb-tools: circleci/orb-tools@9.0
   jq: circleci/jq@dev:alpha
+
+# Pipeline parameters
+parameters:
+  # These pipeline parameters are required by the "trigger-integration-tests-workflow"
+  # job, by default.
+  run-integration-tests:
+    type: boolean
+    default: false
+  dev-orb-version:
+    type: string
+    default: "dev:alpha"
 
 jobs:
   install:
@@ -21,179 +32,85 @@ jobs:
       - jq/install:
           version: <<parameters.version>>
 
-# yaml anchor filters
-integration-dev_filters: &integration-dev_filters
-  branches:
-    ignore: /.*/
-  tags:
-    only: /integration-.*/
-
-integration-master_filters: &integration-master_filters
-  branches:
-    ignore: /.*/
-  tags:
-    only: /master-.*/
+orb_prep_jobs: &orb_prep_jobs
+  [
+    orb-tools/lint,
+    orb-tools/pack
+  ]
 
 prod-deploy_requires: &prod-deploy_requires
   [
-    install-latest-alpine-master,
-    install-latest-machine-master,
-    install-latest-macos-master,
-    install-latest-docker-master,
-    install-latest-oracle-master,
-    install-older-alpine-master,
+    install-latest-alpine,
+    install-latest-machine,
+    install-latest-macos,
+    install-latest-docker,
+    install-latest-oracle,
+    install-older-alpine,
   ]
 
 workflows:
   lint_pack-validate_publish-dev:
+    unless: << pipeline.parameters.run-integration-tests >>
     jobs:
       - orb-tools/lint
 
-      - orb-tools/pack:
-          requires: [orb-tools/lint]
+      - orb-tools/pack
 
       - orb-tools/publish-dev:
           context: orb-publishing
           orb-name: circleci/jq
-          requires: [orb-tools/pack]
+          requires: *orb_prep_jobs
 
-      - orb-tools/trigger-integration-workflow:
+      - orb-tools/trigger-integration-tests-workflow:
           context: orb-publishing
-          name: trigger-integration-dev
-          ssh-fingerprints: 0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3
-          cleanup-tags: true
           requires: [orb-tools/publish-dev]
-          filters:
-            branches:
-              ignore: master
 
-      - orb-tools/trigger-integration-workflow:
-          name: trigger-integration-master
+  integration_tests-prod_deploy:
+    when: << pipeline.parameters.run-integration-tests >>
+    jobs:
+      # latest
+      - install:
+          name: install-latest-alpine
+          executor: orb-tools/alpine
+          context: orb-publishing
+
+      - install:
+          name: install-latest-machine
+          executor: orb-tools/machine
+          context: orb-publishing
+
+      - install:
+          name: install-latest-macos
+          executor: orb-tools/macos
+          context: orb-publishing
+
+      - install:
+          name: install-latest-docker
+          executor: orb-tools/node
+          context: orb-publishing
+
+      - install:
+          name: install-latest-oracle
+          executor: orb-tools/oracle
+          context: orb-publishing
+
+      # older jq
+      - install:
+          name: install-older-alpine
+          executor: orb-tools/alpine
+          version: jq-1.5
+          context: orb-publishing
+
+      - orb-tools/dev-promote-prod-from-commit-subject:
           ssh-fingerprints: 0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3
-          cleanup-tags: true
-          tag: master
-          requires: [orb-tools/publish-dev]
+          context: orb-publishing
+          orb-name: circleci/jq
+          add-pr-comment: true
+          bot-token-variable: GHI_TOKEN
+          bot-user: cpe-bot
+          fail-if-semver-not-indicated: true
+          publish-version-tag: true
+          requires: *prod-deploy_requires
           filters:
             branches:
               only: master
-
-  integration_tests-prod_deploy:
-    jobs:
-      # triggered by non-master branch commits
-      # latest jq
-      - install:
-          name: install-latest-alpine-dev
-          executor: orb-tools/alpine
-          context: orb-publishing
-          filters: *integration-dev_filters
-
-      - install:
-          name: install-latest-machine-dev
-          executor: orb-tools/machine
-          context: orb-publishing
-          filters: *integration-dev_filters
-
-      - install:
-          name: install-latest-macos-dev
-          executor: orb-tools/macos
-          context: orb-publishing
-          filters: *integration-dev_filters
-
-      - install:
-          name: install-latest-docker-dev
-          executor: orb-tools/node
-          context: orb-publishing
-          filters: *integration-dev_filters
-
-      - install:
-          name: install-latest-oracle-dev
-          executor: orb-tools/oracle
-          context: orb-publishing
-          filters: *integration-dev_filters
-
-      # older jq
-      - install:
-          name: install-older-alpine-dev
-          executor: orb-tools/alpine
-          version: jq-1.5
-          context: orb-publishing
-          filters: *integration-dev_filters
-
-      # triggered by master branch commits
-      # latest
-      - install:
-          name: install-latest-alpine-master
-          executor: orb-tools/alpine
-          context: orb-publishing
-          filters: *integration-master_filters
-
-      - install:
-          name: install-latest-machine-master
-          executor: orb-tools/machine
-          context: orb-publishing
-          filters: *integration-master_filters
-
-      - install:
-          name: install-latest-macos-master
-          executor: orb-tools/macos
-          context: orb-publishing
-          filters: *integration-master_filters
-
-      - install:
-          name: install-latest-docker-master
-          executor: orb-tools/node
-          context: orb-publishing
-          filters: *integration-master_filters
-
-      - install:
-          name: install-latest-oracle-master
-          executor: orb-tools/oracle
-          context: orb-publishing
-          filters: *integration-master_filters
-
-      # older jq
-      - install:
-          name: install-older-alpine-master
-          executor: orb-tools/alpine
-          version: jq-1.5
-          context: orb-publishing
-          filters: *integration-master_filters
-
-      # patch, minor, or major publishing
-      - orb-tools/dev-promote-prod:
-          name: dev-promote-patch
-          ssh-fingerprints: 0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3
-          context: orb-publishing
-          orb-name: circleci/jq
-          requires: *prod-deploy_requires
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /master-patch.*/
-
-      - orb-tools/dev-promote-prod:
-          name: dev-promote-minor
-          release: minor
-          ssh-fingerprints: 0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3
-          context: orb-publishing
-          orb-name: circleci/jq
-          requires: *prod-deploy_requires
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /master-minor.*/
-
-      - orb-tools/dev-promote-prod:
-          name: dev-promote-major
-          release: major
-          ssh-fingerprints: 0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3
-          context: orb-publishing
-          orb-name: circleci/jq
-          requires: *prod-deploy_requires
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /master-major.*/
