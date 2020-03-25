@@ -5,4 +5,4 @@ description: >
   headless/automated API scripting.
 
 display:
-  home_url: https://github.com/CircleCI-Public/jq-orb
+  source_url: https://github.com/CircleCI-Public/jq-orb
