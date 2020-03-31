@@ -73,26 +73,41 @@ workflows:
           name: install-latest-alpine
           executor: orb-tools/alpine
           context: orb-publishing
+          # Test that files are not left behind
+          post-steps:
+            - checkout
 
       - install:
           name: install-latest-machine
           executor: orb-tools/machine
           context: orb-publishing
+          # Test that files are not left behind
+          post-steps:
+            - checkout
 
       - install:
           name: install-latest-macos
           executor: orb-tools/macos
           context: orb-publishing
+          # Test that files are not left behind
+          post-steps:
+            - checkout
 
       - install:
           name: install-latest-docker
           executor: orb-tools/node
           context: orb-publishing
+          # Test that files are not left behind
+          post-steps:
+            - checkout
 
       - install:
           name: install-latest-oracle
           executor: orb-tools/oracle
           context: orb-publishing
+          # Test that files are not left behind
+          post-steps:
+            - checkout
 
       # older jq
       - install:
@@ -100,6 +115,9 @@ workflows:
           executor: orb-tools/alpine
           version: jq-1.5
           context: orb-publishing
+          # Test that files are not left behind
+          post-steps:
+            - checkout
 
       - orb-tools/dev-promote-prod-from-commit-subject:
           ssh-fingerprints: 0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3
