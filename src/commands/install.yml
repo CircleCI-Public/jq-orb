@@ -52,13 +52,6 @@ steps:
           JQ_VERSION=<<parameters.version>>
         fi
 
-        # Download jq source tarball
-        JQ_SOURCE_URL="https://github.com/stedolan/jq/archive/$JQ_VERSION.tar.gz"
-        curl -O --silent --show-error --location --fail --retry 3 \
-          "$JQ_SOURCE_URL"
-
-        tar xf "$JQ_VERSION.tar.gz" && rm -rf "$JQ_VERSION.tar.gz"
-
         # extract version number
         JQ_VERSION_NUMBER_STRING=$(echo $JQ_VERSION | sed -E 's/-/ /')
         arrJQ_VERSION_NUMBER=($JQ_VERSION_NUMBER_STRING)
