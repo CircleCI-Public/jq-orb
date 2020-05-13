@@ -13,7 +13,7 @@ parameters:
 
   install-dir:
     type: string
-    default: /usr/local/bin
+    default: ~/bin
     description: >
       Directory in which to install jq
 
@@ -29,6 +29,13 @@ steps:
       name: Install jq
       command: |
         if [[ $EUID == 0 ]]; then export SUDO=""; else export SUDO="sudo"; fi
+
+        if [ ! -f << parameters.install-dir >> ]; then
+          mkdir -p << parameters.install-dir >>
+        fi
+
+        echo 'export PATH=$PATH:<< parameters.install-dir >>' >> $BASH_ENV
+        source $BASH_ENV
 
         # check if jq needs to be installed
         if command -v jq >> /dev/null 2>&1; then
@@ -103,8 +110,8 @@ steps:
             "$JQ_BINARY_URL"
         fi
 
-        $SUDO mv "$jqBinary" <<parameters.install-dir>>/jq
-        $SUDO chmod +x <<parameters.install-dir>>/jq
+        mv "$jqBinary" <<parameters.install-dir>>/jq
+        chmod +x <<parameters.install-dir>>/jq
 
         # cleanup
         [[ -d "./$JQ_VERSION" ]] && rm -rf "./$JQ_VERSION"
