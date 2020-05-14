@@ -34,13 +34,13 @@ steps:
         # Selectively export the SUDO command, depending if we have permission
         # for a directory and whether we're running alpine.
         if [[ $EUID == 0 ]]; then export SUDO=""; else # Check if we're root
-          if cat /etc/issue | grep Alpine > /dev/null 2>&1 || ! [[ -r "<< parameters.install-dir >>" ]]; then
+          if cat /etc/issue | grep Alpine > /dev/null 2>&1 || ! [[ -w "<< parameters.install-dir >>" ]]; then
             export SUDO="sudo";
           fi
         fi
 
         # If our first mkdir didn't succeed, we needed to run as sudo.
-        if [ ! -f << parameters.install-dir >> ]; then
+        if [ ! -w << parameters.install-dir >> ]; then
           $SUDO mkdir -p << parameters.install-dir >>
         fi
 
