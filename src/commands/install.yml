@@ -28,10 +28,16 @@ steps:
   - run:
       name: Install jq
       command: |
-        if [[ $EUID == 0 ]]; then export SUDO=""; else export SUDO="sudo"; fi
+        # Selectively export the SUDO command, depending if we have permission
+        # for a directory and whether we're running alpine.
+        if [[ $EUID == 0 ]]; then export SUDO=""; else # Check if we're root
+          if cat /etc/issue | grep Alpine > /dev/null 2>&1 || ! [[ -r "<< parameters.install-dir >>" ]]; then
+            export SUDO="sudo";
+          fi
+        fi
 
         if [ ! -f << parameters.install-dir >> ]; then
-          mkdir -p << parameters.install-dir >>
+          $SUDO mkdir -p << parameters.install-dir >>
         fi
 
         echo 'export PATH=$PATH:<< parameters.install-dir >>' >> $BASH_ENV
@@ -110,8 +116,8 @@ steps:
             "$JQ_BINARY_URL"
         fi
 
-        mv "$jqBinary" <<parameters.install-dir>>/jq
-        chmod +x <<parameters.install-dir>>/jq
+        $SUDO mv "$jqBinary" <<parameters.install-dir>>/jq
+        $SUDO chmod +x <<parameters.install-dir>>/jq
 
         # cleanup
         [[ -d "./$JQ_VERSION" ]] && rm -rf "./$JQ_VERSION"
