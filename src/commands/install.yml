@@ -28,6 +28,9 @@ steps:
   - run:
       name: Install jq
       command: |
+        # Quietly try to make the install directory.
+        mkdir -p << parameters.install-dir >> | true
+
         # Selectively export the SUDO command, depending if we have permission
         # for a directory and whether we're running alpine.
         if [[ $EUID == 0 ]]; then export SUDO=""; else # Check if we're root
@@ -36,6 +39,7 @@ steps:
           fi
         fi
 
+        # If our first mkdir didn't succeed, we needed to run as sudo.
         if [ ! -f << parameters.install-dir >> ]; then
           $SUDO mkdir -p << parameters.install-dir >>
         fi
