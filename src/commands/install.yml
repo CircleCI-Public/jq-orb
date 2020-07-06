@@ -24,8 +24,15 @@ parameters:
       Whether or not to remove a pre-existing version of jq when this version
       is installed.
 
+  when:
+    type: enum
+    default: "always"
+    description: When to run the command.
+    enum: ["always", "on_fail", "on_success"]
+
 steps:
   - run:
+      when: << parameters.when >>
       name: Install jq
       command: |
         # Quietly try to make the install directory.
