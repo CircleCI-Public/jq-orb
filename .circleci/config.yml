@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   build-tools: circleci/build-tools@2.5.0
   orb-tools: circleci/orb-tools@9.0
-  jq: circleci/jq@dev:alpha
+  jq: circleci/jq@<<pipeline.parameters.dev-orb-version>>
 
 # Pipeline parameters
 parameters:
@@ -121,11 +121,11 @@ workflows:
 
       - orb-tools/dev-promote-prod-from-commit-subject:
           ssh-fingerprints: 0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3
-          context: orb-publishing
+          context: orb-publisher
           orb-name: circleci/jq
           add-pr-comment: true
           bot-token-variable: GHI_TOKEN
-          bot-user: cpe-bot
+          bot-user: orb-publisher
           fail-if-semver-not-indicated: true
           publish-version-tag: true
           requires: *prod-deploy_requires
