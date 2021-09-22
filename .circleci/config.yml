@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   build-tools: circleci/build-tools@2.5.0
-  orb-tools: circleci/orb-tools@9.0
+  orb-tools: circleci/orb-tools@10.0.5
   jq: circleci/jq@<<pipeline.parameters.dev-orb-version>>
 
 # Pipeline parameters
@@ -15,6 +15,23 @@ parameters:
   dev-orb-version:
     type: string
     default: "dev:alpha"
+
+executors:
+  macos:
+    macos:
+      xcode: 12.5.1
+  node:
+    docker:
+      - image: cimg/node:lts
+  base:
+    docker:
+      - image: cimg/base:stable
+  openjdk:
+    docker:
+      - image: cimg/openjdk:16.0.2
+  machine:
+    machine:
+      image: ubuntu-2004:202107-02
 
 jobs:
   install:
@@ -40,12 +57,12 @@ orb_prep_jobs: &orb_prep_jobs
 
 prod-deploy_requires: &prod-deploy_requires
   [
-    install-latest-alpine,
+    install-latest-base,
     install-latest-machine,
     install-latest-macos,
     install-latest-docker,
-    install-latest-oracle,
-    install-older-alpine,
+    install-latest-openjdk,
+    install-older-base,
   ]
 
 workflows:
@@ -70,8 +87,8 @@ workflows:
     jobs:
       # latest
       - install:
-          name: install-latest-alpine
-          executor: orb-tools/alpine
+          name: install-latest-base
+          executor: base
           context: orb-publishing
           # Test that files are not left behind
           post-steps:
@@ -79,7 +96,7 @@ workflows:
 
       - install:
           name: install-latest-machine
-          executor: orb-tools/machine
+          executor: machine
           context: orb-publishing
           # Test that files are not left behind
           post-steps:
@@ -87,7 +104,7 @@ workflows:
 
       - install:
           name: install-latest-macos
-          executor: orb-tools/macos
+          executor: macos
           context: orb-publishing
           # Test that files are not left behind
           post-steps:
@@ -95,15 +112,15 @@ workflows:
 
       - install:
           name: install-latest-docker
-          executor: orb-tools/node
+          executor: node
           context: orb-publishing
           # Test that files are not left behind
           post-steps:
             - checkout
 
       - install:
-          name: install-latest-oracle
-          executor: orb-tools/oracle
+          name: install-latest-openjdk
+          executor: openjdk
           context: orb-publishing
           # Test that files are not left behind
           post-steps:
@@ -111,8 +128,8 @@ workflows:
 
       # older jq
       - install:
-          name: install-older-alpine
-          executor: orb-tools/alpine
+          name: install-older-base
+          executor: base
           version: jq-1.5
           context: orb-publishing
           # Test that files are not left behind
