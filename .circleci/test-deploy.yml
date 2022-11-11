@@ -1,0 +1,59 @@
+version: 2.1
+orbs:
+  jq: circleci/jq@dev:<<pipeline.git.revision>>
+  orb-tools: circleci/orb-tools@11.5
+filters: &filters
+  tags:
+    only: /.*/
+jobs:
+  install:
+    parameters:
+      executor:
+        type: executor
+      version:
+        type: string
+        default: latest
+    executor: <<parameters.executor>>
+    steps:
+      - jq/install:
+          version: <<parameters.version>>
+
+workflows:
+  test-deploy:
+    jobs:
+      # Make sure to include "filters: *filters" in every test job you want to run as part of your deployment.
+      - install:
+          name: install-latest-<< matrix.executor >>
+          filters: *filters
+          matrix:
+            alias: install-latest-executors
+            parameters:
+              executor: [ orb-tools/alpine,
+                        orb-tools/machine,
+                        orb-tools/macos,
+                        orb-tools/node,
+                        orb-tools/oracle ]
+      - install:
+          name: install-older-alpine
+          executor: orb-tools/alpine
+          filters: *filters
+          version: jq-1.5
+          # Test that files are not left behind
+          post-steps:
+            - checkout
+      - orb-tools/pack:
+          filters: *filters
+      - orb-tools/publish:
+          orb-name: circleci/jq
+          vcs-type: << pipeline.project.type >>
+          pub-type: production
+          requires:
+            - orb-tools/pack
+            - install-latest-executors
+            - install-older-alpine
+          context: orb-publisher
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
