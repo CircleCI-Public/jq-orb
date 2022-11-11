@@ -38,4 +38,4 @@ steps:
         ORB_VAL_VERSION: <<parameters.version>>
         ORB_VAL_OVERRIDE: <<parameters.override>>
         ORB_EVAL_INSTALL_DIR: <<parameters.install-dir>>
-      command: |
+      command: << include(scripts/install.sh) >>
