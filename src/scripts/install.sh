@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 INSTALL_DIR=$(eval "echo $ORB_EVAL_INSTALL_DIR")
 
 set -x
@@ -10,7 +8,7 @@ mkdir -p "$INSTALL_DIR" || true
 # Selectively export the SUDO command, depending if we have permission
 # for a directory and whether we're running alpine.
 if [[ $EUID == 0 ]]; then export SUDO=""; else # Check if we're root
-    if grep Alpine < /etc/issue > /dev/null 2>&1 || ! [[ -w "<< parameters.install-dir >>" ]]; then
+    if grep Alpine < /etc/issue > /dev/null 2>&1 || ! [[ -w "$INSTALL_DIR" ]]; then
     export SUDO="sudo";
     fi
 fi
@@ -27,7 +25,6 @@ source "$BASH_ENV"
 
 # check if jq needs to be installed
 if command -v jq >> /dev/null 2>&1; then
-
     echo "jq is already installed..."
 
     if [[ "$ORB_VAL_OVERRIDE" == true ]]; then
