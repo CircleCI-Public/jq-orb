@@ -28,7 +28,8 @@ executors:
     docker:
       - image: cimg/base:stable
   machine:
-    machine: ubuntu-2204:2022.10.2
+    machine: 
+      image: ubuntu-2204:2022.10.2
   macos:
     macos:
       xcode: 14.0.0
@@ -36,7 +37,6 @@ executors:
 workflows:
   test-deploy:
     jobs:
-      # Make sure to include "filters: *filters" in every test job you want to run as part of your deployment.
       - install:
           name: install-latest-<< matrix.executor >>
           filters: *filters
