@@ -2,7 +2,7 @@ version: 2.1
 orbs:
   jq: circleci/jq@dev:<<pipeline.git.revision>>
   orb-tools: circleci/orb-tools@11.5
-
+  
 filters: &filters
   tags:
     only: /.*/
@@ -47,7 +47,7 @@ workflows:
               executor: [ alpine, machine, macos, base ]
       - install:
           name: install-older-alpine
-          executor: orb-tools/alpine
+          executor: alpine
           filters: *filters
           version: jq-1.5
           # Test that files are not left behind
