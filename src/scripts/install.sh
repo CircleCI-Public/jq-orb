@@ -64,14 +64,14 @@ if [ -d "$JQ_VERSION/sig" ]; then
     # import jq sigs
 
     if uname -a | grep Darwin > /dev/null 2>&1; then
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg coreutils
+        HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg coreutils
 
-    PLATFORM=osx-amd64
+        PLATFORM=osx-amd64
     else
-    if grep Alpine < /etc/issue > /dev/null 2>&1; then
-        $SUDO apk add gnupg > /dev/null 2>&1
-    fi
-    PLATFORM=linux64
+        if grep Alpine < /etc/issue > /dev/null 2>&1; then
+            $SUDO apk add gnupg > /dev/null 2>&1
+        fi
+        PLATFORM=linux64
     fi
 
     gpg --import "$JQ_VERSION/sig/jq-release.key" > /dev/null

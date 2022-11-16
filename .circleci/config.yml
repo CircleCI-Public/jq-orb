@@ -19,6 +19,7 @@ workflows:
           filters: *filters
       - shellcheck/check:
           filters: *filters
+          ignore: "SC2148"
       - orb-tools/publish:
           orb-name: circleci/jq
           vcs-type: << pipeline.project.type >>
