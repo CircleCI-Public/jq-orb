@@ -2,9 +2,11 @@ version: 2.1
 orbs:
   jq: circleci/jq@dev:<<pipeline.git.revision>>
   orb-tools: circleci/orb-tools@11.5
+
 filters: &filters
   tags:
     only: /.*/
+
 jobs:
   install:
     parameters:
@@ -18,6 +20,20 @@ jobs:
       - jq/install:
           version: <<parameters.version>>
 
+executors:
+  base:
+    docker:
+      - image: cimg/base:stable
+  machine:
+    machine: ubuntu-2204:2022.10.2
+  minikube:
+    machine:
+      image: ubuntu-2004:202107-02
+    environment: CHANGE_MINIKUBE_NONE_USER=true
+  macos:
+    macos:
+      xcode: 14.0.0
+
 workflows:
   test-deploy:
     jobs:
@@ -28,11 +44,7 @@ workflows:
           matrix:
             alias: install-latest-executors
             parameters:
-              executor: [ orb-tools/alpine,
-                        orb-tools/machine,
-                        orb-tools/macos,
-                        orb-tools/node,
-                        orb-tools/oracle ]
+              executor: [ alpine, machine, macos, base ]
       - install:
           name: install-older-alpine
           executor: orb-tools/alpine
