@@ -2,6 +2,8 @@
 
 INSTALL_DIR=$(eval "echo $ORB_EVAL_INSTALL_DIR")
 
+set -x
+
 # Quietly try to make the install directory.
 mkdir -p "$INSTALL_DIR" || true
 
