@@ -21,15 +21,14 @@ jobs:
           version: <<parameters.version>>
 
 executors:
+  alpine:
+    docker:
+      - image: alpine:latest
   base:
     docker:
       - image: cimg/base:stable
   machine:
     machine: ubuntu-2204:2022.10.2
-  minikube:
-    machine:
-      image: ubuntu-2004:202107-02
-    environment: CHANGE_MINIKUBE_NONE_USER=true
   macos:
     macos:
       xcode: 14.0.0
