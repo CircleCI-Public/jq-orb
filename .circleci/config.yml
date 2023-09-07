@@ -1,10 +1,22 @@
 version: 2.1
 
 orbs:
-  build-tools: circleci/build-tools@2.5.0
   orb-tools: circleci/orb-tools@9.0
   jq: circleci/jq@<<pipeline.parameters.dev-orb-version>>
 
+executors:
+  docker-base:
+    docker:
+      - image: cimg/base:stable
+  macos:
+    macos:
+      xcode: 14.2.0
+  machine:
+    machine:
+      image: ubuntu-2004:202101-01
+  alpine:
+    docker:
+      - image: alpine:latest
 # Pipeline parameters
 parameters:
   # These pipeline parameters are required by the "trigger-integration-tests-workflow"
@@ -27,8 +39,6 @@ jobs:
 
     executor: <<parameters.executor>>
     steps:
-      - build-tools/install-ci-tools
-
       - jq/install:
           version: <<parameters.version>>
 
@@ -71,7 +81,7 @@ workflows:
       # latest
       - install:
           name: install-latest-alpine
-          executor: orb-tools/alpine
+          executor: alpine
           context: orb-publisher
           # Test that files are not left behind
           post-steps:
@@ -79,7 +89,7 @@ workflows:
 
       - install:
           name: install-latest-machine
-          executor: orb-tools/machine
+          executor: machine
           context: orb-publisher
           # Test that files are not left behind
           post-steps:
@@ -87,7 +97,7 @@ workflows:
 
       - install:
           name: install-latest-macos
-          executor: orb-tools/macos
+          executor: macos
           context: orb-publisher
           # Test that files are not left behind
           post-steps:
@@ -95,7 +105,7 @@ workflows:
 
       - install:
           name: install-latest-docker
-          executor: orb-tools/node
+          executor: docker-base
           context: orb-publisher
           # Test that files are not left behind
           post-steps:
@@ -112,7 +122,7 @@ workflows:
       # older jq
       - install:
           name: install-older-alpine
-          executor: orb-tools/alpine
+          executor: alpine
           version: jq-1.5
           context: orb-publisher
           # Test that files are not left behind
