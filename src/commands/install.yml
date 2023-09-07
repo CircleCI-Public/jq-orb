@@ -9,7 +9,7 @@ parameters:
     description: >
       Version of jq to install, defaults to `latest`. If specifying a
       version other than latest, provide a full release tag, as listed at
-      https://api.github.com/repos/stedolan/jq/releases, e.g., `jq-1.6`.
+      https://api.github.com/repos/jqlang/jq/releases, e.g., `jq-1.7`.
 
   install-dir:
     type: string
@@ -70,7 +70,7 @@ steps:
 
         # Set jq version
         if [[ <<parameters.version>> == "latest" ]]; then
-          JQ_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.com/stedolan/jq/releases/latest" | sed 's:.*/::')
+          JQ_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.com/jqlang/jq/releases/latest" | sed 's:.*/::')
           echo "Latest version of jq is $JQ_VERSION"
         else
           JQ_VERSION=<<parameters.version>>
@@ -84,10 +84,10 @@ steps:
         # Set binary download URL for specified version
         # handle mac version
         if uname -a | grep Darwin > /dev/null 2>&1; then
-          JQ_BINARY_URL="https://github.com/stedolan/jq/releases/download/${JQ_VERSION}/jq-osx-amd64"
+          JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-osx-amd64"
         else
           # linux version
-          JQ_BINARY_URL="https://github.com/stedolan/jq/releases/download/${JQ_VERSION}/jq-linux64"
+          JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-linux64"
         fi
 
         jqBinary="jq-$PLATFORM"
