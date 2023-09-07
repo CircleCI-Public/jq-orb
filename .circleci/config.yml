@@ -14,9 +14,6 @@ executors:
   machine:
     machine:
       image: ubuntu-2004:202101-01
-  alpine:
-    docker:
-      - image: alpine:latest
 # Pipeline parameters
 parameters:
   # These pipeline parameters are required by the "trigger-integration-tests-workflow"
@@ -81,7 +78,7 @@ workflows:
       # latest
       - install:
           name: install-latest-alpine
-          executor: alpine
+          executor: orb-tools/alpine
           context: orb-publisher
           # Test that files are not left behind
           post-steps:
@@ -122,7 +119,7 @@ workflows:
       # older jq
       - install:
           name: install-older-alpine
-          executor: alpine
+          executor: orb-tools/alpine
           version: jq-1.5
           context: orb-publisher
           # Test that files are not left behind
