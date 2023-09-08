@@ -42,8 +42,8 @@ else
 fi
 
 # extract version number
-JQ_VERSION_NUMBER_STRING=$(echo $JQ_VERSION | sed -E 's/-/ /')
-arrJQ_VERSION_NUMBER=($JQ_VERSION_NUMBER_STRING)
+JQ_VERSION_NUMBER_STRING=$(echo "${JQ_VERSION}" | sed -E 's/-/ /')
+arrJQ_VERSION_NUMBER=("$JQ_VERSION_NUMBER_STRING")
 JQ_VERSION_NUMBER="${arrJQ_VERSION_NUMBER[1]}"
 
 # Set binary download URL for specified version
@@ -65,7 +65,7 @@ if [ -d "$JQ_VERSION/sig" ]; then
 
     PLATFORM=osx-amd64
     else
-    if cat /etc/issue | grep Alpine > /dev/null 2>&1; then
+    if grep "Alpine" /etc/issue > /dev/null 2>&1; then
         $SUDO apk add gnupg > /dev/null 2>&1
     fi
     PLATFORM=linux64
