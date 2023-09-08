@@ -11,7 +11,7 @@ parameters:
       version other than latest, provide a full release tag, as listed at
       https://api.github.com/repos/jqlang/jq/releases, e.g., `jq-1.6`.
 
-  install-dir:
+  install_dir:
     type: string
     default: ~/bin
     description: >
@@ -36,6 +36,6 @@ steps:
       name: Install jq
       environment:
         ORB_JQ_STR_VERSION: << parameters.version >>
-        ORB_JQ_EVAL_INSTALL_DIR: << parameters.install-dir >>
+        ORB_JQ_EVAL_INSTALL_DIR: << parameters.install_dir >>
         ORB_JQ_BOOL_OVERRIDE: << parameters.override >>
       command: 
