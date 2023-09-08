@@ -1,7 +1,10 @@
 #!/bin/bash
 #shellcheck disable=SC1090
 # Quietly try to make the install directory.
-mkdir -p "${ORB_JQ_EVAL_INSTALL_DIR}" | true
+mkdir -p "${ORB_JQ_EVAL_INSTALL_DIR}"
+
+ORB_JQ_STR_VERSION="$(echo "$ORB_JQ_STR_VERSION" | circleci env subst)"
+ORB_JQ_EVAL_INSTALL_DIR="$(eval echo "${ORB_JQ_EVAL_INSTALL_DIR}")"
 
 # Selectively export the SUDO command, depending if we have permission
 # for a directory and whether we're running alpine.
@@ -35,7 +38,7 @@ fi
 
 # Set jq version
 if [[ "${ORB_JQ_STR_VERSION}" == "latest" ]]; then
-    JQ_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.com/jqlang/jq/releases/latest" | sed 's:.*/::')
+    JQ_VERSION=$(curl -Ls -o /dev/null -w "%{url_effective}" "https://github.com/jqlang/jq/releases/latest" | sed 's:.*/::')
     echo "Latest version of jq is $JQ_VERSION"
 else
     JQ_VERSION=ORB_JQ_STR_VERSION
