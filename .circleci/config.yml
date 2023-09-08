@@ -1,141 +1,28 @@
 version: 2.1
 
 orbs:
-  orb-tools: circleci/orb-tools@9.0
-  jq: circleci/jq@<<pipeline.parameters.dev-orb-version>>
+  orb-tools: circleci/orb-tools@12.0
+  shellcheck: circleci/shellcheck@3.1
 
-executors:
-  docker-base:
-    docker:
-      - image: cimg/base:stable
-  macos:
-    macos:
-      xcode: 14.2.0
-  machine:
-    machine:
-      image: ubuntu-2004:202101-01
-# Pipeline parameters
-parameters:
-  # These pipeline parameters are required by the "trigger-integration-tests-workflow"
-  # job, by default.
-  run-integration-tests:
-    type: boolean
-    default: false
-  dev-orb-version:
-    type: string
-    default: "dev:alpha"
-
-jobs:
-  install:
-    parameters:
-      executor:
-        type: executor
-      version:
-        type: string
-        default: latest
-
-    executor: <<parameters.executor>>
-    steps:
-      - jq/install:
-          version: <<parameters.version>>
-
-orb_prep_jobs: &orb_prep_jobs
-  [
-    orb-tools/lint,
-    orb-tools/pack
-  ]
-
-prod-deploy_requires: &prod-deploy_requires
-  [
-    install-latest-alpine,
-    install-latest-machine,
-    install-latest-macos,
-    install-latest-docker,
-    install-latest-oracle,
-    install-older-alpine,
-  ]
+filters: &filters
+  tags:
+    only: /.*/
 
 workflows:
-  lint_pack-validate_publish-dev:
-    unless: << pipeline.parameters.run-integration-tests >>
+  lint-pack:
     jobs:
-      - orb-tools/lint
+      - orb-tools/lint:
+          filters: *filters
+      - orb-tools/pack:
+          filters: *filters
+      - orb-tools/review:
+          filters: *filters
+      - shellcheck/check:
+          filters: *filters
+      - orb-tools/continue:
+          orb_name: jq
+          pipeline_number: << pipeline.number >>
+          vcs_type: << pipeline.project.type >>
+          requires: [orb-tools/lint, orb-tools/review, orb-tools/pack, shellcheck/check]
+          filters: *filters
 
-      - orb-tools/pack
-
-      - orb-tools/publish-dev:
-          context: orb-publisher
-          orb-name: circleci/jq
-          requires: *orb_prep_jobs
-
-      - orb-tools/trigger-integration-tests-workflow:
-          context: orb-publisher
-          requires: [orb-tools/publish-dev]
-
-  integration_tests-prod_deploy:
-    when: << pipeline.parameters.run-integration-tests >>
-    jobs:
-      # latest
-      - install:
-          name: install-latest-alpine
-          executor: orb-tools/alpine
-          context: orb-publisher
-          # Test that files are not left behind
-          post-steps:
-            - checkout
-
-      - install:
-          name: install-latest-machine
-          executor: machine
-          context: orb-publisher
-          # Test that files are not left behind
-          post-steps:
-            - checkout
-
-      - install:
-          name: install-latest-macos
-          executor: macos
-          context: orb-publisher
-          # Test that files are not left behind
-          post-steps:
-            - checkout
-
-      - install:
-          name: install-latest-docker
-          executor: docker-base
-          context: orb-publisher
-          # Test that files are not left behind
-          post-steps:
-            - checkout
-
-      - install:
-          name: install-latest-oracle
-          executor: orb-tools/oracle
-          context: orb-publisher
-          # Test that files are not left behind
-          post-steps:
-            - checkout
-
-      # older jq
-      - install:
-          name: install-older-alpine
-          executor: orb-tools/alpine
-          version: jq-1.5
-          context: orb-publisher
-          # Test that files are not left behind
-          post-steps:
-            - checkout
-
-      - orb-tools/dev-promote-prod-from-commit-subject:
-          ssh-fingerprints: 0c:0f:b7:32:1f:7e:55:1b:f9:e9:ba:93:f9:4f:e1:e3
-          context: orb-publisher
-          orb-name: circleci/jq
-          add-pr-comment: true
-          bot-token-variable: GHI_TOKEN
-          bot-user: orb-publisher
-          fail-if-semver-not-indicated: true
-          publish-version-tag: true
-          requires: *prod-deploy_requires
-          filters:
-            branches:
-              only: master
