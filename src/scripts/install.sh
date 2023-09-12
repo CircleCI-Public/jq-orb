@@ -8,10 +8,10 @@ ORB_JQ_EVAL_INSTALL_DIR="$(eval echo "${ORB_JQ_EVAL_INSTALL_DIR}")"
 
 # Selectively export the SUDO command, depending if we have permission
 # for a directory and whether we're running alpine.
-if [[ $EUID == 0 ]]; then export SUDO=""; else # Check if we're root
-    if grep "Alpine" /etc/issue > /dev/null 2>&1 || ! [[ -w "${ORB_JQ_EVAL_INSTALL_DIR}" ]]; then
-    export SUDO="sudo";
-    fi
+if grep "Alpine" /etc/issue > /dev/null 2>&1; then # Check if we're root
+    if [ "$ID" = 0 ]; then export SUDO=""; else export SUDO="sudo"; fi
+else
+    if [ "$EUID" = 0 ]; then export SUDO=""; else export SUDO="sudo"; fi
 fi
 
 # If our first mkdir didn't succeed, we needed to run as sudo.
