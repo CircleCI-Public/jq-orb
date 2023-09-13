@@ -1,0 +1,80 @@
+version: 2.1
+orbs:
+  orb-tools: circleci/orb-tools@12.0
+  jq: {}
+filters: &filters
+  tags:
+    only: /.*/
+release-filters: &release-filters
+  branches:
+    ignore: /.*/
+  tags:
+    only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
+executors:
+  docker-base:
+    docker:
+      - image: cimg/base:stable
+  alpine:
+    docker:
+      - image: alpine:latest
+  macos:
+    macos:
+      xcode: 14.2.0
+  machine:
+    machine:
+      image: ubuntu-2004:202101-01
+
+jobs:
+  install:
+    parameters:
+      executor:
+        type: executor
+      version:
+        type: string
+        default: latest
+    executor: <<parameters.executor>>
+    steps:
+      - jq/install:
+          version: <<parameters.version>>
+
+workflows:
+  integration_tests-prod_deploy:
+    jobs:
+      # latest
+      - install:
+          name: install-latest-alpine
+          executor: alpine
+          context: orb-publisher
+
+      - install:
+          name: install-latest-machine
+          executor: machine
+          context: orb-publisher
+
+      - install:
+          name: install-latest-macos
+          executor: macos
+          context: orb-publisher
+
+      - install:
+          name: install-latest-docker
+          executor: docker-base
+          context: orb-publisher
+
+      # older jq
+      - install:
+          name: install-older-alpine
+          executor: alpine
+          version: jq-1.5
+          context: orb-publisher
+
+      - orb-tools/pack:
+          filters: *release-filters
+      - orb-tools/publish:
+          orb_name: circleci/jq
+          vcs_type: << pipeline.project.type >>
+          pub_type: production
+          enable_pr_comment: true
+          requires: [orb-tools/pack, ]
+          context: orb-publisher
+          filters: *release-filters

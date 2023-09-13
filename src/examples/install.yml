@@ -5,15 +5,15 @@ usage:
   version: 2.1
 
   orbs:
-    jq: circleci/jq@x.y.z
+    jq: circleci/jq@3.0.0
 
   jobs:
     build:
       docker:
-        - image: your-image
+        - image: cimg/base:current
       steps:
-        - checkout
-        - jq/install
+        - jq/install:
+            version: jq-1.7
 
   workflows:
     your-workflow:
