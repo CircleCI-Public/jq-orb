@@ -28,7 +28,7 @@ steps:
   - run:
       name: Install jq
       environment:
-        ORB_JQ_STR_VERSION: << parameters.version >>
-        ORB_JQ_EVAL_INSTALL_DIR: << parameters.install_dir >>
-        ORB_JQ_BOOL_OVERRIDE: << parameters.override >>
+        JQ_STR_VERSION: << parameters.version >>
+        JQ_EVAL_INSTALL_DIR: << parameters.install_dir >>
+        JQ_BOOL_OVERRIDE: << parameters.override >>
       command: <<include(scripts/install.sh)>>

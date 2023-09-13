@@ -1,25 +1,25 @@
-#!/bin/bash
-#shellcheck disable=SC1090
+#!/bin/sh
+#shellcheck disable=SC1090,SC3028
 # Quietly try to make the install directory.
-mkdir -p "${ORB_JQ_EVAL_INSTALL_DIR}"
+mkdir -p "${JQ_EVAL_INSTALL_DIR}"
 
-ORB_JQ_STR_VERSION="$(echo "$ORB_JQ_STR_VERSION" | circleci env subst)"
-ORB_JQ_EVAL_INSTALL_DIR="$(eval echo "${ORB_JQ_EVAL_INSTALL_DIR}")"
+JQ_STR_VERSION="$(echo "${JQ_STR_VERSION}" | circleci env subst)"
+JQ_EVAL_INSTALL_DIR="$(eval echo "${JQ_EVAL_INSTALL_DIR}")"
 
 # Selectively export the SUDO command, depending if we have permission
 # for a directory and whether we're running alpine.
 if grep "Alpine" /etc/issue > /dev/null 2>&1; then # Check if we're root
-    if [ "$ID" = 0 ]; then export SUDO=""; else export SUDO="sudo"; fi
+    if [ "$ID" = 0 ]; then export SUDO="sudo"; else export SUDO=""; fi
 else
     if [ "$EUID" = 0 ]; then export SUDO=""; else export SUDO="sudo"; fi
 fi
 
 # If our first mkdir didn't succeed, we needed to run as sudo.
-if [ ! -w "${ORB_JQ_EVAL_INSTALL_DIR}" ]; then
-    $SUDO mkdir -p "${ORB_JQ_EVAL_INSTALL_DIR}"
+if [ ! -w "${JQ_EVAL_INSTALL_DIR}" ]; then
+    $SUDO mkdir -p "${JQ_EVAL_INSTALL_DIR}"
 fi
 
-echo "export PATH=$PATH:\"${ORB_JQ_EVAL_INSTALL_DIR}\"" >> "$BASH_ENV"
+echo "export PATH=$PATH:\"${JQ_EVAL_INSTALL_DIR}\"" >> "$BASH_ENV"
 . "$BASH_ENV"
 
 # check if jq needs to be installed
@@ -27,7 +27,7 @@ if command -v jq >> /dev/null 2>&1; then
 
     echo "jq is already installed..."
 
-    if [[ "${ORB_JQ_BOOL_OVERRIDE}" -eq 1 ]]; then
+    if [ "${JQ_BOOL_OVERRIDE}" -eq 1 ]; then
     echo "removing it."
     $SUDO rm -f "$(command -v jq)"
     else
@@ -37,17 +37,16 @@ if command -v jq >> /dev/null 2>&1; then
 fi
 
 # Set jq version
-if [[ "${ORB_JQ_STR_VERSION}" == "latest" ]]; then
-    JQ_VERSION=$(curl -Ls -o /dev/null -w "%{url_effective}" "https://github.com/jqlang/jq/releases/latest" | sed 's:.*/::')
+if [ "${JQ_STR_VERSION}" = "latest" ]; then
+    JQ_VERSION=$(wget -q --server-response -O /dev/null "https://github.com/jqlang/jq/releases/latest" 2>&1 | awk '/^  Location: /{print $2}' | sed 's:.*/::')
     echo "Latest version of jq is $JQ_VERSION"
 else
-    JQ_VERSION=ORB_JQ_STR_VERSION
+    JQ_VERSION="${JQ_STR_VERSION}"
 fi
 
 # extract version number
 JQ_VERSION_NUMBER_STRING=$(echo "${JQ_VERSION}" | sed -E 's/-/ /')
-arrJQ_VERSION_NUMBER=("$JQ_VERSION_NUMBER_STRING")
-JQ_VERSION_NUMBER="${arrJQ_VERSION_NUMBER[1]}"
+JQ_VERSION_NUMBER="$(echo "$JQ_VERSION_NUMBER_STRING" | awk '{print $2}')"
 
 # Set binary download URL for specified version
 # handle mac version
@@ -76,30 +75,43 @@ if [ -d "$JQ_VERSION/sig" ]; then
 
     gpg --import "$JQ_VERSION/sig/jq-release.key" > /dev/null
 
-    curl --output "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM" \
-        --silent --show-error --location --fail --retry 3 \
-        "$JQ_BINARY_URL"
+    wget -q -O "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM" \
+        --tries=3 --retry-connrefused "$JQ_BINARY_URL"
 
     # verify sha256sum, sig, install
-
     gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM.asc"
 
-    pushd "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER" && grep "jq-$PLATFORM" "sha256sum.txt" | \
-    sha256sum -c -
-    popd || exit
-    jqBinary="$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM"
+    cd "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER" || exit
+
+    grep "jq-$PLATFORM" "sha256sum.txt" > tmp_checksum.txt
+
+    if grep "jq-$PLATFORM" "sha256sum.txt" -eq 0; then
+        sha256sum -c tmp_checksum.txt
+        status=$?
+
+        rm tmp_checksum.txt
+
+        if [ $status -eq 0 ]; then
+            jqBinary="$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM"
+        else
+            echo "Checksum verification failed. Please check checksum"
+            exit 1
+        fi
+    else
+        exit 1
+    fi
+
+    cd - >/dev/null || exit
 
 else
-    curl --output "$jqBinary" \
-    --silent --show-error --location --fail --retry 3 \
-    "$JQ_BINARY_URL"
+    wget -O "$jqBinary" -q --tries=3 "$JQ_BINARY_URL"
 fi
 
-$SUDO mv "$jqBinary" "${ORB_JQ_EVAL_INSTALL_DIR}"/jq
-$SUDO chmod +x "${ORB_JQ_EVAL_INSTALL_DIR}"/jq
+$SUDO mv "$jqBinary" "${JQ_EVAL_INSTALL_DIR}"/jq
+$SUDO chmod +x "${JQ_EVAL_INSTALL_DIR}"/jq
 
 # cleanup
-[[ -d "./$JQ_VERSION" ]] && rm -rf "./$JQ_VERSION"
+[ -d "./$JQ_VERSION" ] && rm -rf "./$JQ_VERSION"
 
 # verify version
 echo "jq has been installed to $(which jq)"
