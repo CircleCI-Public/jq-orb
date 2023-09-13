@@ -12,8 +12,8 @@ usage:
       docker:
         - image: cimg/base:current
       steps:
-        - checkout
-        - jq/install
+        - jq/install:
+            version: jq-1.7
 
   workflows:
     your-workflow:
