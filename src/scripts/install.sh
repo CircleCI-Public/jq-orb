@@ -19,7 +19,7 @@ if [ ! -w "${JQ_EVAL_INSTALL_DIR}" ]; then
     $SUDO mkdir -p "${JQ_EVAL_INSTALL_DIR}"
 fi
 
-echo "export PATH=$PATH:\"${JQ_EVAL_INSTALL_DIR}\"" >> "$BASH_ENV"
+echo "export PATH=\$PATH:\"${JQ_EVAL_INSTALL_DIR}\"" >> "$BASH_ENV"
 . "$BASH_ENV"
 
 # check if jq needs to be installed
