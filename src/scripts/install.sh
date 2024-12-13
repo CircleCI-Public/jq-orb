@@ -51,7 +51,7 @@ JQ_VERSION_NUMBER="$(echo "$JQ_VERSION_NUMBER_STRING" | awk '{print $2}')"
 # Set binary download URL for specified version
 # handle mac version
 if uname -a | grep Darwin > /dev/null 2>&1; then
-    JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-osx-amd64"
+    JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-macos-arm64"
 else
     # linux version
     JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-linux64"
