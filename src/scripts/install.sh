@@ -1,10 +1,10 @@
 #!/bin/sh
 #shellcheck disable=SC1090,SC3028
 # Quietly try to make the install directory.
-mkdir -p "${JQ_EVAL_INSTALL_DIR}"
 
 JQ_STR_VERSION="$(echo "${JQ_STR_VERSION}" | circleci env subst)"
 JQ_EVAL_INSTALL_DIR="$(eval echo "${JQ_EVAL_INSTALL_DIR}")"
+mkdir -p "${JQ_EVAL_INSTALL_DIR}"
 
 # Selectively export the SUDO command, depending if we have permission
 # for a directory and whether we're running alpine.
