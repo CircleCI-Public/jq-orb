@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  orb-tools: circleci/orb-tools@12.0
+  orb-tools: circleci/orb-tools@12.2
   jq: {}
 filters: &filters
   tags:
@@ -36,6 +36,7 @@ jobs:
     steps:
       - jq/install:
           version: <<parameters.version>>
+      - checkout
 
 workflows:
   integration_tests-prod_deploy:
