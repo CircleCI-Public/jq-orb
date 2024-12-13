@@ -32,10 +32,14 @@ jobs:
       version:
         type: string
         default: latest
+      override:
+        type: boolean
+        default: false
     executor: <<parameters.executor>>
     steps:
       - jq/install:
           version: <<parameters.version>>
+          override: <<parameters.override>>
       - checkout
 
 workflows:
@@ -61,7 +65,13 @@ workflows:
           name: install-latest-docker
           executor: docker-base
           context: orb-publisher
-
+      - install:
+          name: install-jq-1.7-<<matrix.executor>>
+          matrix:
+            parameters:
+              executor: [alpine, macos, machine, docker-base]
+          version: jq-1.7
+          override: true
       # older jq
       - install:
           name: install-older-alpine
