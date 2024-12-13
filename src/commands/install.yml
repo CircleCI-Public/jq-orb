@@ -13,7 +13,7 @@ parameters:
 
   install_dir:
     type: string
-    default: ${HOME}/bin
+    default: ~/bin
     description: >
       Directory in which to install jq
 
