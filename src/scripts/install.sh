@@ -54,7 +54,11 @@ if uname -a | grep Darwin > /dev/null 2>&1; then
     JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-macos-arm64"
 else
     # linux version
-    JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-linux64"
+    if uname -m | grep x86_64 > /dev/null 2>&1; then
+        JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-linux-amd64"
+    else
+        JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-linux-arm64"
+    fi
 fi
 
 jqBinary="jq-$PLATFORM"
@@ -63,14 +67,16 @@ if [ -d "$JQ_VERSION/sig" ]; then
     # import jq sigs
 
     if uname -a | grep Darwin > /dev/null 2>&1; then
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg coreutils
-
-    PLATFORM=osx-amd64
+        HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg coreutils
+        PLATFORM=macos-arm64
     else
-    if grep "Alpine" /etc/issue > /dev/null 2>&1; then
-        $SUDO apk add gnupg > /dev/null 2>&1
-    fi
-    PLATFORM=linux64
+        if grep "Alpine" /etc/issue > /dev/null 2>&1; then
+            $SUDO apk add gnupg > /dev/null 2>&1
+        elif uname -m | grep x86_64 > /dev/null 2>&1; then
+            PLATFORM=linux-amd64
+        else
+            PLATFORM=linux-arm64
+        fi
     fi
 
     gpg --import "$JQ_VERSION/sig/jq-release.key" > /dev/null

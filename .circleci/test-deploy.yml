@@ -23,6 +23,10 @@ executors:
   machine:
     machine:
       image: ubuntu-2004:current
+  arm:
+    machine:
+      image: ubuntu-2004:current
+    resource_class: arm.medium
 
 jobs:
   install:
@@ -69,7 +73,7 @@ workflows:
           name: install-jq-1.7-<<matrix.executor>>
           matrix:
             parameters:
-              executor: [alpine, macos, machine, docker-base]
+              executor: [alpine, macos, machine, docker-base, arm]
           version: jq-1.7
           override: true
       # older jq
