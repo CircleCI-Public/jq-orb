@@ -14,19 +14,24 @@ executors:
   docker-base:
     docker:
       - image: cimg/base:stable
+    shell: bash -eox pipefail
   alpine:
     docker:
       - image: alpine:latest
+    shell: sh -eox pipefail
   macos:
     macos:
       xcode: 14.2.0
+    shell: bash -eox pipefail
   machine:
     machine:
       image: ubuntu-2004:current
+    shell: bash -eox pipefail
   arm:
     machine:
       image: ubuntu-2004:current
     resource_class: arm.medium
+    shell: bash -eox pipefail
 
 jobs:
   install:
@@ -45,6 +50,10 @@ jobs:
           version: <<parameters.version>>
           override: <<parameters.override>>
       - checkout
+      - run:
+          name: Verify version
+          command: |
+            jq --version | grep <<parameters.version>>
 
 workflows:
   integration_tests-prod_deploy:
