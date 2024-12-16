@@ -55,7 +55,7 @@ if uname -a | grep Darwin > /dev/null 2>&1; then
 else
     # linux version
     if uname -m | grep x86_64 > /dev/null 2>&1; then
-        JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-linux-amd64"
+        JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-linux64"
     else
         JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-linux-arm64"
     fi
@@ -73,7 +73,7 @@ if [ -d "$JQ_VERSION/sig" ]; then
         if grep "Alpine" /etc/issue > /dev/null 2>&1; then
             $SUDO apk add gnupg > /dev/null 2>&1
         elif uname -m | grep x86_64 > /dev/null 2>&1; then
-            PLATFORM=linux-amd64
+            PLATFORM=linux64
         else
             PLATFORM=linux-arm64
         fi

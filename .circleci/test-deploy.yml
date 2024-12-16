@@ -53,7 +53,12 @@ jobs:
       - run:
           name: Verify version
           command: |
-            jq --version | grep <<parameters.version>>
+            if [ <<parameters.version>> = "latest" ]; then
+              JQ_VERSION=$(wget -q --server-response -O /dev/null "https://github.com/jqlang/jq/releases/latest" 2>&1 | awk '/^  Location: /{print $2}' | sed 's:.*/::')
+            else
+              JQ_VERSION=<<parameters.version>>
+            fi
+            jq --version | grep $JQ_VERSION
 
 workflows:
   integration_tests-prod_deploy:
