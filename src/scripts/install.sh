@@ -30,7 +30,9 @@ if [ ! -w "${JQ_EVAL_INSTALL_DIR}" ]; then
     $SUDO mkdir -p "${JQ_EVAL_INSTALL_DIR}"
 fi
 
-echo "export PATH=\$PATH:\"${JQ_EVAL_INSTALL_DIR}\"" >> "$BASH_ENV"
+# Prepend so the newly-installed jq takes precedence over any system jq
+# (e.g. /usr/bin/jq on macOS, which lives on a read-only system volume).
+echo "export PATH=\"${JQ_EVAL_INSTALL_DIR}\":\$PATH" >> "$BASH_ENV"
 . "$BASH_ENV"
 
 # check if jq needs to be installed
@@ -39,8 +41,11 @@ if command -v jq >> /dev/null 2>&1; then
     echo "jq is already installed..."
 
     if [ "${JQ_BOOL_OVERRIDE}" -eq 1 ]; then
-    echo "removing it."
-    $SUDO rm -f "$(command -v jq)"
+        existing_jq="$(command -v jq)"
+        echo "removing it."
+        if ! $SUDO rm -f "$existing_jq" 2>/dev/null; then
+            echo "Could not remove $existing_jq (likely a read-only system location); the newly installed jq will take precedence via PATH."
+        fi
     else
     echo "ignoring install request."
     exit 0
