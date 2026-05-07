@@ -49,7 +49,11 @@ fi
 
 # Set jq version
 if [ "${JQ_STR_VERSION}" = "latest" ]; then
-    JQ_VERSION=$(wget -q --server-response -O /dev/null "https://github.com/jqlang/jq/releases/latest" 2>&1 | awk '/^  Location: /{print $2}' | sed 's:.*/::')
+    if [ "$IS_WINDOWS" -eq 1 ]; then
+        JQ_VERSION=$(curl -sI "https://github.com/jqlang/jq/releases/latest" | awk 'tolower($1) == "location:" {print $2}' | tr -d '\r\n' | sed 's:.*/::')
+    else
+        JQ_VERSION=$(wget -q --server-response -O /dev/null "https://github.com/jqlang/jq/releases/latest" 2>&1 | awk '/^  Location: /{print $2}' | sed 's:.*/::')
+    fi
     echo "Latest version of jq is $JQ_VERSION"
 else
     JQ_VERSION="${JQ_STR_VERSION}"
@@ -105,8 +109,12 @@ if [ -d "$JQ_VERSION/sig" ]; then
 
     gpg --import "$JQ_VERSION/sig/jq-release.key" > /dev/null
 
-    wget -q -O "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM" \
-        --tries=3 --retry-connrefused "$JQ_BINARY_URL"
+    if [ "$IS_WINDOWS" -eq 1 ]; then
+        curl -sSL --retry 3 -o "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM" "$JQ_BINARY_URL"
+    else
+        wget -q -O "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM" \
+            --tries=3 --retry-connrefused "$JQ_BINARY_URL"
+    fi
 
     # verify sha256sum, sig, install
     gpg --verify "$JQ_VERSION/sig/v$JQ_VERSION_NUMBER/jq-$PLATFORM.asc"
@@ -134,7 +142,11 @@ if [ -d "$JQ_VERSION/sig" ]; then
     cd - >/dev/null || exit
 
 else
-    wget -O "$jqBinary" -q --tries=3 "$JQ_BINARY_URL"
+    if [ "$IS_WINDOWS" -eq 1 ]; then
+        curl -sSL --retry 3 -o "$jqBinary" "$JQ_BINARY_URL"
+    else
+        wget -O "$jqBinary" -q --tries=3 "$JQ_BINARY_URL"
+    fi
 fi
 
 if [ "$IS_WINDOWS" -eq 1 ]; then

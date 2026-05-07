@@ -25,16 +25,16 @@ executors:
     shell: bash -eox pipefail
   machine:
     machine:
-      image: ubuntu-2004:current
+      image: ubuntu-2404:current
     shell: bash -eox pipefail
   arm:
     machine:
-      image: ubuntu-2004:current
+      image: ubuntu-2404:current
     resource_class: arm.medium
     shell: bash -eox pipefail
   windows:
     machine:
-      image: windows-server-2022-gui:current
+      image: windows-server-2025-gui:current
     resource_class: windows.medium
     shell: bash.exe -eo pipefail
 
