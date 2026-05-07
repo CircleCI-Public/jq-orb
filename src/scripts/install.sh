@@ -6,9 +6,20 @@ JQ_STR_VERSION="$(echo "${JQ_STR_VERSION}" | circleci env subst)"
 JQ_EVAL_INSTALL_DIR="$(eval echo "${JQ_EVAL_INSTALL_DIR}")"
 mkdir -p "${JQ_EVAL_INSTALL_DIR}"
 
+# Detect Windows (Git Bash / MSYS / Cygwin). sudo is unavailable there.
+IS_WINDOWS=0
+case "$(uname -s 2>/dev/null)" in
+    MINGW*|MSYS*|CYGWIN*) IS_WINDOWS=1 ;;
+esac
+if [ "$IS_WINDOWS" -eq 0 ] && [ "${OS:-}" = "Windows_NT" ]; then
+    IS_WINDOWS=1
+fi
+
 # Selectively export the SUDO command, depending if we have permission
 # for a directory and whether we're running alpine.
-if grep "Alpine" /etc/issue > /dev/null 2>&1; then # Check if we're root
+if [ "$IS_WINDOWS" -eq 1 ]; then
+    export SUDO=""
+elif grep "Alpine" /etc/issue > /dev/null 2>&1; then # Check if we're root
     if [ "$ID" = 0 ]; then export SUDO="sudo"; else export SUDO=""; fi
 else
     if [ "$EUID" = 0 ]; then export SUDO=""; else export SUDO="sudo"; fi
@@ -49,8 +60,15 @@ JQ_VERSION_NUMBER_STRING=$(echo "${JQ_VERSION}" | sed -E 's/-/ /')
 JQ_VERSION_NUMBER="$(echo "$JQ_VERSION_NUMBER_STRING" | awk '{print $2}')"
 
 # Set binary download URL for specified version
+# handle Windows version
+if [ "$IS_WINDOWS" -eq 1 ]; then
+    if uname -m 2>/dev/null | grep -E 'i[3-6]86' > /dev/null 2>&1; then
+        JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-windows-i386.exe"
+    else
+        JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-windows-amd64.exe"
+    fi
 # handle mac version
-if uname -a | grep Darwin > /dev/null 2>&1; then
+elif uname -a | grep Darwin > /dev/null 2>&1; then
     JQ_BINARY_URL="https://github.com/jqlang/jq/releases/download/${JQ_VERSION}/jq-macos-arm64"
 else
     # linux version
@@ -66,7 +84,13 @@ jqBinary="jq-$PLATFORM"
 if [ -d "$JQ_VERSION/sig" ]; then
     # import jq sigs
 
-    if uname -a | grep Darwin > /dev/null 2>&1; then
+    if [ "$IS_WINDOWS" -eq 1 ]; then
+        if uname -m 2>/dev/null | grep -E 'i[3-6]86' > /dev/null 2>&1; then
+            PLATFORM=windows-i386.exe
+        else
+            PLATFORM=windows-amd64.exe
+        fi
+    elif uname -a | grep Darwin > /dev/null 2>&1; then
         HOMEBREW_NO_AUTO_UPDATE=1 brew install gnupg coreutils
         PLATFORM=macos-arm64
     else
@@ -113,8 +137,16 @@ else
     wget -O "$jqBinary" -q --tries=3 "$JQ_BINARY_URL"
 fi
 
-$SUDO mv "$jqBinary" "${JQ_EVAL_INSTALL_DIR}"/jq
-$SUDO chmod +x "${JQ_EVAL_INSTALL_DIR}"/jq
+if [ "$IS_WINDOWS" -eq 1 ]; then
+    JQ_TARGET="${JQ_EVAL_INSTALL_DIR}/jq.exe"
+else
+    JQ_TARGET="${JQ_EVAL_INSTALL_DIR}/jq"
+fi
+
+$SUDO mv "$jqBinary" "$JQ_TARGET"
+if [ "$IS_WINDOWS" -eq 0 ]; then
+    $SUDO chmod +x "$JQ_TARGET"
+fi
 
 # cleanup
 [ -d "./$JQ_VERSION" ] && rm -rf "./$JQ_VERSION"

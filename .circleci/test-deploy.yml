@@ -21,7 +21,7 @@ executors:
     shell: sh -eox pipefail
   macos:
     macos:
-      xcode: 14.2.0
+      xcode: 26.5.0
     shell: bash -eox pipefail
   machine:
     machine:
@@ -32,6 +32,11 @@ executors:
       image: ubuntu-2004:current
     resource_class: arm.medium
     shell: bash -eox pipefail
+  windows:
+    machine:
+      image: windows-server-2022-gui:current
+    resource_class: windows.medium
+    shell: bash.exe -eo pipefail
 
 jobs:
   install:
@@ -73,11 +78,17 @@ workflows:
           name: install-latest-docker
           executor: docker-base
           context: orb-publisher
+
+      - install:
+          name: install-latest-windows
+          executor: windows
+          context: orb-publisher
+
       - install:
           name: install-jq-1.7-<<matrix.executor>>
           matrix:
             parameters:
-              executor: [alpine, macos, machine, docker-base, arm]
+              executor: [alpine, macos, machine, docker-base, arm, windows]
           version: jq-1.7
           override: true
       # older jq
